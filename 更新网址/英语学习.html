@@ -249,15 +249,11 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .cal-dow span{font-size:10px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-day{position:relative;aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.55);border:1px solid rgba(88,86,214,.14);box-shadow:0 1px 4px rgba(88,86,214,.06);display:flex;align-items:center;justify-content:center;padding:4px;font-size:11px;font-weight:600;color:var(--text);overflow:hidden}
+.cal-day{position:relative;aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.55);border:1px solid rgba(88,86,214,.14);box-shadow:0 1px 4px rgba(88,86,214,.06);display:flex;align-items:center;justify-content:center;padding:4px;font-size:11px;font-weight:600;color:var(--text);overflow:hidden;transition:background-color .3s ease}
 .cal-day.empty{background:transparent;border-color:transparent;box-shadow:none}
-.cal-day.past{opacity:.35}
 .cal-day.today{box-shadow:0 0 0 2px var(--accent) inset}
-.cal-day.has{background:rgba(88,86,214,.1)}
-.cal-day .cd-water{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(180deg,rgba(88,86,214,.55),rgba(88,86,214,.32));border-radius:0 0 9px 9px;transition:height .4s ease;z-index:0}
 .cal-day .cd-n{position:absolute;top:4px;left:6px;font-size:10px;font-weight:700;color:var(--muted);z-index:1}
 .cal-day .cd-c{position:relative;font-size:18px;font-weight:800;color:var(--accent);line-height:1;z-index:1}
-.cal-day.has .cd-c{color:#fff;text-shadow:0 1px 3px rgba(88,86,214,.4)}
 @media (max-width:700px){
   .cal-day .cd-n{font-size:8px;top:2px;left:4px}
   .cal-day .cd-c{font-size:14px}
@@ -377,7 +373,7 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
   <div class="stats">
     <div class="stat"><div class="n" id="s-due">0</div><div class="l">待复习</div></div>
     <div class="stat"><div class="n" id="s-total">0</div><div class="l">卡片总数</div></div>
-    <div class="stat"><div class="n" id="s-streak">0</div><div class="l">连续学习天数</div></div>
+    <div class="stat"><div class="n" id="s-streak">0</div><div class="l">累计学习天数</div></div>
   </div>
   <div class="chart-card">
     <div class="chart-hd"><div class="chart-title">复习日历预测</div><div class="chart-sub">每天待复习卡片数，展示到下月底</div></div>
@@ -673,9 +669,26 @@ function renderForecastChart(cards) {
   const el = document.getElementById('chart-forecast'); if(!el) return;
   const todayStr = tod();
   const fmt = (y,m,day) => `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-  const counts = {};
-  cards.forEach(c => { const d = c.nextReview || todayStr; counts[d] = (counts[d]||0) + 1; });
-  const maxCount = Math.max(...Object.values(counts), 1);
+
+  // 历史实际复习数量（按 lastReview 统计，包含今天已完成的）
+  const reviewedCounts = {};
+  cards.forEach(c => { if (c.lastReview) reviewedCounts[c.lastReview] = (reviewedCounts[c.lastReview]||0) + 1; });
+
+  // 未来到期数量（按 nextReview 精确匹配）
+  const dueCounts = {};
+  cards.forEach(c => { const d = c.nextReview || todayStr; dueCounts[d] = (dueCounts[d]||0) + 1; });
+
+  // 今天的数量：用 isDue 把逾期未复习的卡片也并入今天，而不是停留在过去的日期上
+  const todayDueCount = cards.filter(isDue).length;
+
+  const getCount = (ds) => {
+    if (ds < todayStr) return reviewedCounts[ds] || 0;
+    if (ds === todayStr) return todayDueCount;
+    return dueCounts[ds] || 0;
+  };
+
+  const allCounts = [todayDueCount, ...Object.values(dueCounts), ...Object.values(reviewedCounts)];
+  const maxCount = Math.max(...allCounts, 1);
 
   const now = new Date();
   const year = now.getFullYear(), month = now.getMonth();
@@ -692,12 +705,15 @@ function renderForecastChart(cards) {
     for (let i=0; i<startWeekday; i++) html += '<div class="cal-day empty"></div>';
     for (let day=1; day<=totalDays; day++) {
       const ds = fmt(y,m,day);
-      const count = counts[ds] || 0;
+      const count = getCount(ds);
       const isToday = ds === todayStr;
       const isPast = ds < todayStr;
-      const cls = ['cal-day', isPast?'past':'', isToday?'today':'', count>0?'has':''].filter(Boolean).join(' ');
-      const waterPct = count>0 ? Math.round((count/maxCount)*100) : 0;
-      html += `<div class="${cls}"><div class="cd-water" style="height:${waterPct}%"></div><div class="cd-n">${day}</div>${count>0?`<div class="cd-c">${count}</div>`:''}</div>`;
+      const cls = ['cal-day', isToday?'today':''].filter(Boolean).join(' ');
+      const intensity = count>0 ? Math.min(0.18 + (count/maxCount)*0.72, 0.9) : 0;
+      const rgb = isPast ? '52,199,89' : '255,149,0'; // green for past, orange for today/future
+      const bg = count>0 ? `background:rgba(${rgb},${intensity.toFixed(2)})` : '';
+      const textColor = intensity > 0.45 ? '#fff' : (isPast ? 'var(--green)' : 'var(--orange)');
+      html += `<div class="${cls}" style="${bg}"><div class="cd-n">${day}</div>${count>0?`<div class="cd-c" style="color:${textColor}">${count}</div>`:''}</div>`;
     }
     html += '</div></div>';
   });
@@ -1273,13 +1289,15 @@ function saveEdit(){
 // ══════════════════════════════════════════════
 //  Streak
 // ══════════════════════════════════════════════
-function getStreak(){return (JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}').s);}
+function getStreak(){return (JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":"","t":0}').t||0);}
 function updStreak(){
-  const data=JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}');
+  const data=JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":"","t":0}');
   const t=tod();if(data.d===t)return;
   const yest=new Date();yest.setDate(yest.getDate()-1);
   const yd=yest.toISOString().split('T')[0];
-  data.s=(data.d===yd)?data.s+1:1;data.d=t;
+  data.s=(data.d===yd)?data.s+1:1;
+  data.t=(data.t||0)+1;
+  data.d=t;
   localStorage.setItem(SKEY,JSON.stringify(data));
 }
 
