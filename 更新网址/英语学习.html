@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语学习</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#5856D6;--accent2:#34AADC;--accent-lt:rgba(88,86,214,.1);
+  --text:#1C1C1E;--muted:#8E8E93;--border:rgba(255,255,255,.55);
+  --hover:rgba(255,255,255,.45);--glass:rgba(255,255,255,.72);
+  --green:#34C759;--green-lt:rgba(52,199,89,.12);
+  --orange:#FF9500;--orange-lt:rgba(255,149,0,.12);
+  --red:#FF3B30;
+  --sh:0 4px 24px rgba(88,86,214,.1);--sh-md:0 8px 32px rgba(88,86,214,.18);
+  --r:20px;
+}
+html{height:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:linear-gradient(145deg,#E8EEFF 0%,#EDE8FF 40%,#F5E8FF 100%);
+  color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px;
+  min-height:100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:230px;
+  background:var(--glass);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:20px 0;
+  flex-shrink:0;overflow-y:auto;z-index:10;
+}
+.logo{padding:4px 20px 22px;font-size:17px;font-weight:800;display:flex;align-items:center;gap:10px;color:var(--text);letter-spacing:-.3px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 4px 12px rgba(88,86,214,.35)}
+.sb-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:4px 20px;margin-top:10px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;cursor:pointer;font-size:13px;font-weight:500;margin:1px 10px;transition:all .18s;user-select:none;color:var(--muted)}
+.sb-item:hover{background:rgba(255,255,255,.5);color:var(--text)}
+.sb-item.active{background:rgba(88,86,214,.12);color:var(--accent);font-weight:700}
+.sb-item .ico{font-size:16px;width:22px;text-align:center}
+.badge{margin-left:auto;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;min-width:20px;text-align:center;box-shadow:0 2px 6px rgba(88,86,214,.3)}
+
+/* ── Main ── */
+.main{flex:1;overflow-y:auto;padding:36px 44px;max-width:960px}
+.page{display:none}.page.active{display:block}
+
+h1{font-size:26px;font-weight:800;margin-bottom:4px;letter-spacing:-.5px;color:var(--text)}
+h2{font-size:15px;font-weight:700;margin-bottom:14px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:24px;font-weight:500}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.stat{
+  background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:var(--r);padding:22px;
+  border:1px solid var(--border);
+  box-shadow:var(--sh);
+}
+.stat .n{font-size:34px;font-weight:800;letter-spacing:-1.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat:nth-child(2) .n{background:linear-gradient(135deg,var(--green),#30D158);-webkit-background-clip:text;background-clip:text}
+.stat:nth-child(3) .n{background:linear-gradient(135deg,var(--orange),#FF6B00);-webkit-background-clip:text;background-clip:text}
+.stat .l{font-size:12px;color:var(--muted);margin-top:5px;font-weight:600}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .18s;font-family:inherit;letter-spacing:-.1px}
+.btn-dark{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 14px rgba(88,86,214,.4)}.btn-dark:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 20px rgba(88,86,214,.5)}
+.btn-ghost{background:rgba(255,255,255,.6);backdrop-filter:blur(10px);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:rgba(255,255,255,.8)}
+
+/* ── Section ── */
+.sec{margin-bottom:28px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.divider{height:1px;background:rgba(255,255,255,.5);margin:24px 0}
+
+/* ── Cards grid ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card{
+  background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:var(--r);padding:18px;cursor:pointer;
+  transition:all .2s;
+  border:1px solid var(--border);
+  box-shadow:var(--sh);
+}
+.card:hover{box-shadow:var(--sh-md);transform:translateY(-3px);background:rgba(255,255,255,.85)}
+.card.due{border-left:3px solid var(--accent)}
+.card .ct{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.card .cs{font-size:13px;color:var(--muted);line-height:1.5;font-weight:400}
+.card .cm{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.card .cnr{font-size:11px;color:var(--muted);font-weight:500}
+.due-dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:4px;vertical-align:middle}
+
+/* ── Type badges ── */
+.tb{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+.tb-word{background:rgba(88,86,214,.12);color:var(--accent)}
+.tb-dialogue{background:rgba(52,199,89,.15);color:#248A3D}
+.tb-phrase{background:rgba(255,149,0,.15);color:#B25000}
+
+/* ── Challenge type badge ── */
+.ctb{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.ctb-audio{background:rgba(88,86,214,.1);color:var(--accent)}
+.ctb-image{background:rgba(52,170,220,.12);color:#0077A8}
+.ctb-scene{background:rgba(255,149,0,.12);color:#B25000}
+
+/* ── Filter chips ── */
+.chips{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.chip{padding:6px 15px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--glass);backdrop-filter:blur(10px);color:var(--muted);border:1px solid var(--border);transition:all .15s}
+.chip.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(88,86,214,.3)}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:3px;background:rgba(255,255,255,.4);backdrop-filter:blur(10px);padding:4px;border-radius:14px;margin-bottom:22px;width:fit-content;border:1px solid var(--border)}
+.tab{padding:7px 18px;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s}
+.tab.active{background:#fff;color:var(--accent);box-shadow:0 2px 10px rgba(88,86,214,.15)}
+
+/* ── Form ── */
+.fg{margin-bottom:18px}
+.fl{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fi,.fs,.ft{width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,.6);border-radius:12px;font-size:14px;color:var(--text);background:rgba(255,255,255,.65);backdrop-filter:blur(10px);outline:none;transition:all .18s;font-family:inherit}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--accent);background:rgba(255,255,255,.9);box-shadow:0 0 0 3px rgba(88,86,214,.12)}
+.ft{resize:vertical;min-height:78px;line-height:1.6}
+.add-line{background:rgba(255,255,255,.4);border:1.5px dashed rgba(88,86,214,.3);border-radius:12px;padding:8px;width:100%;cursor:pointer;color:var(--muted);font-size:13px;font-family:inherit;margin-top:4px;transition:all .15s;font-weight:600}
+.add-line:hover{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.6)}
+.rm{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:3px;line-height:1}
+.rm:hover{color:var(--red)}
+.dl-row{display:grid;grid-template-columns:60px 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:start}
+.ex-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px}
+
+/* ── Flashcard ── */
+.review-wrap{display:flex;flex-direction:column;align-items:center;padding:24px 0}
+.prog{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:20px;letter-spacing:.1em;text-transform:uppercase}
+.flashcard{
+  width:100%;max-width:560px;min-height:280px;
+  background:rgba(255,255,255,.78);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-radius:24px;padding:38px;cursor:pointer;
+  transition:all .2s;
+  border:1px solid rgba(255,255,255,.8);
+  box-shadow:0 8px 40px rgba(88,86,214,.14);
+  position:relative;
+}
+.flashcard:hover{box-shadow:0 14px 50px rgba(88,86,214,.22);transform:translateY(-2px)}
+.cf-badge{position:absolute;top:16px;right:16px}
+.flip-hint{font-size:12px;font-weight:600;color:var(--muted);margin-top:16px;text-align:center}
+.card-back-sep{border-top:1px solid rgba(88,86,214,.1);padding-top:20px;margin-top:20px;display:none}
+.card-back-sep.show{display:block}
+.ratings{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:560px;margin-top:20px}
+.rb{
+  padding:12px 8px;border-radius:14px;cursor:pointer;text-align:center;
+  background:rgba(255,255,255,.7);backdrop-filter:blur(10px);
+  transition:all .18s;border:1.5px solid rgba(255,255,255,.8);
+  box-shadow:0 2px 10px rgba(88,86,214,.06);
+}
+.rb:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(88,86,214,.15);background:rgba(255,255,255,.95)}
+.rb .rl{font-size:12px;font-weight:700;margin-bottom:3px}
+.rb .rs{font-size:11px;color:var(--muted)}
+.rb0:hover{border-color:var(--red)}
+.rb1:hover{border-color:var(--orange)}
+.rb2:hover{border-color:var(--green)}
+.rb3:hover{border-color:var(--accent)}
+
+/* ── Dialogue display ── */
+.dl-line{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.sp{font-size:11px;font-weight:700;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.spa{background:rgba(88,86,214,.12);color:var(--accent)}
+.spb{background:rgba(52,199,89,.15);color:#248A3D}
+.dl-text{font-size:14px;font-weight:500;line-height:1.5}
+.dl-tr{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── Word card ── */
+.w-main{font-size:34px;font-weight:800;margin-bottom:6px;letter-spacing:-1.5px;color:var(--text)}
+.w-ph{font-size:15px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.w-def{font-size:15px;line-height:1.6;margin-bottom:10px;font-weight:500}
+.w-ex{font-size:14px;color:var(--muted);font-style:italic;line-height:1.6}
+
+/* ── Phrase card ── */
+.p-main{font-size:22px;font-weight:700;line-height:1.4;margin-bottom:6px;letter-spacing:-.3px}
+.p-exp{font-size:15px;line-height:1.6;margin-bottom:8px}
+.p-usage{font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:500}
+.p-ex{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:5px}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(28,27,46,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;z-index:900}
+.overlay.open{display:flex}
+.modal{
+  background:rgba(255,255,255,.88);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border-radius:24px;padding:32px;max-width:540px;width:90%;max-height:82vh;overflow-y:auto;
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 24px 80px rgba(88,86,214,.22);
+}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-cl{background:rgba(0,0,0,.06);border:none;font-size:15px;cursor:pointer;color:var(--muted);width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.modal-cl:hover{background:rgba(0,0,0,.1)}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:13px}
+.meta-grid .mk{font-weight:700;margin-bottom:2px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+.meta-grid .mv{color:var(--text);font-weight:600;font-size:14px}
+
+/* ── Empty / Done ── */
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty .ei{font-size:46px;margin-bottom:14px}
+.empty h3{color:var(--text);margin-bottom:6px;font-weight:700}
+.done-wrap{text-align:center;padding:56px 0}
+.done-wrap .di{font-size:60px;margin-bottom:14px}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;right:24px;background:rgba(28,28,30,.88);backdrop-filter:blur(20px);color:#fff;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;opacity:0;transform:translateY(10px);transition:all .28s;pointer-events:none;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Audio button ── */
+.speak-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 15px;border-radius:20px;border:1.5px solid rgba(88,86,214,.2);background:rgba(255,255,255,.6);backdrop-filter:blur(10px);cursor:pointer;font-size:12px;font-weight:700;color:var(--accent);transition:all .15s}
+.speak-btn:hover{background:rgba(88,86,214,.1);border-color:var(--accent)}
+.speak-btn.playing{border-color:var(--accent);color:var(--accent);background:#EBF2FD}
+
+/* ── Challenge type selector (in Add form) ── */
+.ct-sel{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.ct-opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 8px;border:2px solid rgba(255,255,255,.6);border-radius:16px;cursor:pointer;transition:all .18s;background:rgba(255,255,255,.55);backdrop-filter:blur(10px);text-align:center}
+.ct-opt:hover{border-color:rgba(88,86,214,.4);transform:translateY(-2px);background:rgba(255,255,255,.75)}
+.ct-opt.selected{border-color:var(--accent);background:rgba(88,86,214,.08);box-shadow:0 4px 16px rgba(88,86,214,.15)}
+.ct-opt .ct-ico{font-size:26px}
+.ct-opt .ct-title{font-size:12px;font-weight:700;color:var(--text)}
+.ct-opt .ct-desc{font-size:11px;color:var(--muted);line-height:1.3}
+
+/* ── Listening mode card ── */
+.listen-front{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:20px}
+.listen-scene{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.listen-play{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform .18s;box-shadow:0 8px 24px rgba(88,86,214,.4)}
+.listen-play:hover{transform:scale(1.1)}
+.listen-play.playing{animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(88,86,214,.4)}50%{box-shadow:0 8px 36px rgba(88,86,214,.7)}}
+.listen-hint{font-size:13px;color:var(--muted);font-weight:600}
+
+/* ── Image mode ── */
+.card-img{width:100%;max-height:220px;object-fit:contain;border-radius:16px;margin-bottom:12px}
+.img-front{display:flex;flex-direction:column;align-items:center;gap:12px}
+.no-img-hint{text-align:center;padding:40px;color:var(--muted);font-size:13px;border:2px dashed rgba(88,86,214,.2);border-radius:16px;font-weight:500}
+
+/* ── Charts ── */
+.chart-card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:16px}
+.chart-hd{margin-bottom:14px}
+.chart-title{font-size:14px;font-weight:700;color:var(--text)}
+.chart-sub{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
+.mem-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.mem-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-weight:600}
+.mem-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Forecast calendar ── */
+.cal-wrap{display:flex;flex-direction:column;gap:18px}
+.cal-month-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-dow span{font-size:10px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{position:relative;aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.55);border:1px solid rgba(88,86,214,.14);box-shadow:0 1px 4px rgba(88,86,214,.06);display:flex;align-items:center;justify-content:center;padding:4px;font-size:11px;font-weight:600;color:var(--text);overflow:hidden}
+.cal-day.empty{background:transparent;border-color:transparent;box-shadow:none}
+.cal-day.past{opacity:.35}
+.cal-day.today{box-shadow:0 0 0 2px var(--accent) inset}
+.cal-day.has{background:rgba(88,86,214,.1)}
+.cal-day .cd-water{position:absolute;left:0;right:0;bottom:0;height:0%;background:linear-gradient(180deg,rgba(88,86,214,.55),rgba(88,86,214,.32));border-radius:0 0 9px 9px;transition:height .4s ease;z-index:0}
+.cal-day .cd-n{position:absolute;top:4px;left:6px;font-size:10px;font-weight:700;color:var(--muted);z-index:1}
+.cal-day .cd-c{position:relative;font-size:18px;font-weight:800;color:var(--accent);line-height:1;z-index:1}
+.cal-day.has .cd-c{color:#fff;text-shadow:0 1px 3px rgba(88,86,214,.4)}
+@media (max-width:700px){
+  .cal-day .cd-n{font-size:8px;top:2px;left:4px}
+  .cal-day .cd-c{font-size:14px}
+}
+
+/* ── Bottom nav (mobile only) ── */
+.bottom-nav{display:none}
+
+/* ── Mobile responsive ── */
+@media (max-width: 700px) {
+  body{flex-direction:column}
+
+  /* 隐藏桌面侧边栏 */
+  .sidebar{display:none}
+
+  /* 主内容全宽，底部留出导航栏空间 */
+  .main{padding:20px 16px 90px;max-width:100%;width:100%}
+
+  h1{font-size:22px}
+  .sub{margin-bottom:16px}
+
+  /* 统计卡片 */
+  .stats{grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+  .stat{padding:14px 10px}
+  .stat .n{font-size:26px}
+  .stat .l{font-size:11px}
+
+  /* 卡片网格单列 */
+  .grid{grid-template-columns:1fr;gap:12px}
+
+  /* 复习卡全宽 */
+  .flashcard{border-radius:20px;padding:24px}
+  .w-main{font-size:28px}
+  .ratings{grid-template-columns:repeat(2,1fr)}
+  .review-wrap{padding:12px 0}
+
+  /* 对话行 */
+  .dl-row{grid-template-columns:50px 1fr auto;gap:6px}
+  .dl-row input:nth-child(3){display:none}
+
+  /* 句型选择器 */
+  .ct-sel{grid-template-columns:repeat(3,1fr);gap:6px}
+  .ct-opt{padding:10px 4px}
+  .ct-opt .ct-ico{font-size:20px}
+  .ct-opt .ct-title{font-size:11px}
+  .ct-opt .ct-desc{display:none}
+
+  /* toast 底部上移 */
+  .toast{bottom:80px;right:12px;left:12px;text-align:center}
+
+  /* 弹窗全宽 */
+  .modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;max-height:90vh;margin:0}
+  .overlay.open{align-items:flex-end}
+
+  /* section header */
+  .sec-hd{flex-wrap:wrap;gap:8px}
+
+  /* 底部导航 */
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:rgba(255,255,255,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-top:1px solid rgba(255,255,255,.6);
+    padding:8px 0 max(12px, env(safe-area-inset-bottom));
+    z-index:100;justify-content:space-around;
+  }
+  .bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 16px;cursor:pointer;border-radius:12px;transition:all .15s;flex:1;border:none;background:none;font-family:inherit}
+  .bn-item .bn-ico{font-size:22px;line-height:1}
+  .bn-item .bn-label{font-size:10px;font-weight:600;color:var(--muted)}
+  .bn-item.active .bn-label{color:var(--accent)}
+  .bn-item.active .bn-ico{transform:scale(1.1)}
+  .bn-badge{position:relative;display:inline-block}
+  .bn-badge::after{content:attr(data-count);position:absolute;top:-4px;right:-8px;background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:10px;min-width:14px;text-align:center;display:none}
+  .bn-badge.has-count::after{display:block}
+}
+
+/* ── Shadow Reading ── */
+.shadow-wrap{display:flex;flex-direction:column;gap:20px;max-width:680px}
+.shadow-drop{border:2px dashed rgba(88,86,214,.3);border-radius:var(--r);padding:28px;text-align:center;background:rgba(255,255,255,.4);cursor:pointer;transition:all .18s}
+.shadow-drop:hover{border-color:var(--accent);background:rgba(88,86,214,.06)}
+.shadow-drop.loaded{border-style:solid;border-color:var(--green)}
+.shadow-player{position:relative;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9}
+.shadow-player video{width:100%;height:100%;display:block}
+.shadow-mask{position:absolute;left:0;right:0;bottom:0;height:38%;background:#000;transition:opacity .2s}
+.shadow-mask.visible{opacity:0}
+.shadow-sub-box{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;min-height:80px}
+.shadow-en{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:6px}
+.shadow-zh{font-size:14px;color:var(--muted);font-weight:500}
+.shadow-controls{display:flex;gap:10px;align-items:center}
+.shadow-progress{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto}
+.shadow-files{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+}</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo"><div class="logo-icon">📖</div>英语学习</div>
+  <div class="sb-label">主菜单</div>
+  <div class="sb-item active" data-page="home" onclick="nav('home')"><span class="ico">🏠</span>主页</div>
+  <div class="sb-item" data-page="review" onclick="nav('review')"><span class="ico">🔄</span>今日复习<span class="badge" id="badge">0</span></div>
+  <div class="sb-item" data-page="library" onclick="nav('library')"><span class="ico">📚</span>卡片库</div>
+  <div class="sb-item" data-page="add" onclick="nav('add')"><span class="ico">＋</span>添加卡片</div>
+  <div class="sb-item" data-page="shadow" onclick="nav('shadow')"><span class="ico">🎬</span>影子跟读</div>
+  <div class="sb-label" style="margin-top:12px">按场景</div>
+  <div id="scene-nav"></div>
+  <div class="sb-label" style="margin-top:12px">云同步</div>
+  <div class="sb-item" onclick="openSyncModal()"><span class="ico">☁️</span><span id="sync-status-label">同步设置</span></div>
+</nav>
+
+<!-- Pages -->
+<main class="main">
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <h1>今日学习</h1>
+  <p class="sub" id="home-date"></p>
+  <div class="stats">
+    <div class="stat"><div class="n" id="s-due">0</div><div class="l">待复习</div></div>
+    <div class="stat"><div class="n" id="s-total">0</div><div class="l">卡片总数</div></div>
+    <div class="stat"><div class="n" id="s-streak">0</div><div class="l">连续学习天数</div></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-hd"><div class="chart-title">复习日历预测</div><div class="chart-sub">每天待复习卡片数，展示到下月底</div></div>
+    <div id="chart-forecast"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-hd"><div class="chart-title">记忆存量曲线</div><div class="chart-sub">当前卡片未来 30 天预计平均记忆保留率</div></div>
+    <div id="chart-memory"></div>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="page" id="page-review">
+  <h1>今日复习</h1>
+  <p class="sub">SM-2 智能间隔复习</p>
+  <div id="mode-select-area"></div>
+  <div id="review-content"></div>
+</div>
+
+<!-- LIBRARY -->
+<div class="page" id="page-library">
+  <div class="sec-hd">
+    <div><h1>卡片库</h1><p class="sub" style="margin-bottom:0">管理所有学习卡片</p></div>
+    <div style="display:flex;gap:8px">
+      <label class="btn btn-ghost" style="cursor:pointer">📥 导入<input type="file" accept=".json" style="display:none" onchange="importCards(this)"></label>
+      <button class="btn btn-dark" onclick="nav('add')">＋ 添加</button>
+    </div>
+  </div>
+  <div class="chips" id="type-chips">
+    <div class="chip active" onclick="setTF('all',this)">全部</div>
+    <div class="chip" onclick="setTF('word',this)">单词</div>
+    <div class="chip" onclick="setTF('sentence',this)">句子</div>
+  </div>
+  <div class="chips" id="scene-chips"></div>
+  <div class="grid" id="lib-grid"></div>
+</div>
+
+<!-- ADD -->
+<div class="page" id="page-add">
+  <h1>添加卡片</h1>
+  <p class="sub">选择类型，填写内容</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('word',this)">单词</div>
+    <div class="tab" onclick="switchTab('phrase',this)">句子</div>
+  </div>
+
+  <!-- Word -->
+  <div id="f-word">
+    <div class="fg"><label class="fl">单词 *</label><input class="fi" id="ww" placeholder="e.g. boarding pass"></div>
+    <div class="fg"><label class="fl">音标</label><input class="fi" id="wph" placeholder="e.g. /ˈbɔːrdɪŋ pæs/"></div>
+    <div class="fg"><label class="fl">中文释义 *</label><input class="fi" id="wd" placeholder="e.g. 登机牌"></div>
+    <div class="fg"><label class="fl">英文例句</label><textarea class="ft" id="we" placeholder="e.g. May I see your boarding pass?"></textarea></div>
+    <div class="fg"><label class="fl">例句中文翻译</label><input class="fi" id="wec" placeholder="e.g. 请出示您的登机牌。"></div>
+    <div class="fg"><label class="fl">场景</label><select class="fs" id="wsc"></select></div>
+    <div class="fg">
+      <label class="fl">复习方式 *</label>
+      <div class="ct-sel" id="wct">
+        <div class="ct-opt selected" data-ct="audio" onclick="pickCT('w',this)"><div class="ct-ico">🎧</div><div class="ct-title">音频卡片</div><div class="ct-desc">听音频说出含义</div></div>
+        <div class="ct-opt" data-ct="image" onclick="pickCT('w',this)"><div class="ct-ico">🖼️</div><div class="ct-title">图像卡片</div><div class="ct-desc">看图说出词语</div></div>
+        <div class="ct-opt" data-ct="scene" onclick="pickCT('w',this)"><div class="ct-ico">📍</div><div class="ct-title">场景卡片</div><div class="ct-desc">读场景说英文</div></div>
+      </div>
+      <div id="w-img-wrap" style="display:none;margin-top:10px"><input class="fi" id="wimg" placeholder="https://...（粘贴图片链接）"></div>
+      <div id="w-sc-wrap" style="display:none;margin-top:10px"><textarea class="ft" id="wscenep" placeholder="描述使用场景，如：向服务生索要纸巾。复习时会看到这段文字，需要说出对应英文。" style="min-height:64px"></textarea></div>
+    </div>
+    <button class="btn btn-dark" onclick="save('word')">保存卡片</button>
+  </div>
+
+  <!-- Dialogue -->
+  <div id="f-dialogue" style="display:none">
+    <div class="fg"><label class="fl">对话标题 *</label><input class="fi" id="dt" placeholder="e.g. 办理登机手续"></div>
+    <div class="fg"><label class="fl">场景</label><select class="fs" id="dsc"></select></div>
+    <div class="fg">
+      <label class="fl">对话内容 *</label>
+      <div id="dl-rows"></div>
+      <button class="add-line" onclick="addDRow()">＋ 添加一行</button>
+    </div>
+    <div class="fg">
+      <label class="fl">复习方式 *</label>
+      <div class="ct-sel" id="dct">
+        <div class="ct-opt selected" data-ct="audio" onclick="pickCT('d',this)"><div class="ct-ico">🎧</div><div class="ct-title">音频卡片</div><div class="ct-desc">听音频理解对话</div></div>
+        <div class="ct-opt" data-ct="image" onclick="pickCT('d',this)"><div class="ct-ico">🖼️</div><div class="ct-title">图像卡片</div><div class="ct-desc">看图还原对话</div></div>
+        <div class="ct-opt" data-ct="scene" onclick="pickCT('d',this)"><div class="ct-ico">📍</div><div class="ct-title">场景卡片</div><div class="ct-desc">读场景说对话</div></div>
+      </div>
+      <div id="d-img-wrap" style="display:none;margin-top:10px"><input class="fi" id="dimg" placeholder="https://...（粘贴图片链接）"></div>
+      <div id="d-sc-wrap" style="display:none;margin-top:10px"><textarea class="ft" id="dscenep" placeholder="描述对话场景，如：在餐厅结账，顾客向服务生要账单并询问能否打包。" style="min-height:64px"></textarea></div>
+    </div>
+    <button class="btn btn-dark" onclick="save('dialogue')">保存卡片</button>
+  </div>
+
+  <!-- Phrase -->
+  <div id="f-phrase" style="display:none">
+    <div class="fg"><label class="fl">句型 / 短语 *</label><input class="fi" id="pp" placeholder="e.g. Could you please...?"></div>
+    <div class="fg"><label class="fl">中文解释 *</label><input class="fi" id="pe" placeholder="e.g. 请问您能...吗？（礼貌请求）"></div>
+    <div class="fg"><label class="fl">使用场景说明</label><input class="fi" id="pu" placeholder="e.g. 正式场合向陌生人提出请求"></div>
+    <div class="fg">
+      <label class="fl">例句</label>
+      <div id="pex-rows"><div class="ex-row"><input class="fi" placeholder="e.g. Could you please show me the menu?"><button class="rm" onclick="this.parentElement.remove()">×</button></div></div>
+      <button class="add-line" onclick="addPEx()">＋ 添加例句</button>
+    </div>
+    <div class="fg"><label class="fl">场景</label><select class="fs" id="psc"></select></div>
+    <div class="fg">
+      <label class="fl">复习方式 *</label>
+      <div class="ct-sel" id="pct">
+        <div class="ct-opt selected" data-ct="audio" onclick="pickCT('p',this)"><div class="ct-ico">🎧</div><div class="ct-title">音频卡片</div><div class="ct-desc">听音频说出句型</div></div>
+        <div class="ct-opt" data-ct="image" onclick="pickCT('p',this)"><div class="ct-ico">🖼️</div><div class="ct-title">图像卡片</div><div class="ct-desc">看图说出句型</div></div>
+        <div class="ct-opt" data-ct="scene" onclick="pickCT('p',this)"><div class="ct-ico">📍</div><div class="ct-title">场景卡片</div><div class="ct-desc">读场景说句型</div></div>
+      </div>
+      <div id="p-img-wrap" style="display:none;margin-top:10px"><input class="fi" id="pimg" placeholder="https://...（粘贴图片链接）"></div>
+      <div id="p-sc-wrap" style="display:none;margin-top:10px"><textarea class="ft" id="pscenep" placeholder="描述使用场景，如：向服务生索要纸巾。复习时会看到这段文字，需要说出对应句型。" style="min-height:64px"></textarea></div>
+    </div>
+    <button class="btn btn-dark" onclick="save('phrase')">保存卡片</button>
+  </div>
+</div>
+
+<!-- SHADOW READING -->
+<div class="page" id="page-shadow">
+  <h1>影子跟读</h1>
+  <p class="sub">逐句播放，跟读练习口语</p>
+  <div class="shadow-wrap">
+    <div class="shadow-player" id="shadow-player">
+      <video id="shadow-video" playsinline src="视频/全英文vlog-机场翻包.mp4"></video>
+      <div class="shadow-mask" id="shadow-mask"></div>
+    </div>
+
+    <div class="shadow-sub-box" id="shadow-sub-box">
+      <div class="shadow-en" id="shadow-en">点击「开始」播放第一句</div>
+      <div class="shadow-zh" id="shadow-zh"></div>
+    </div>
+
+    <div class="shadow-controls">
+      <button class="btn btn-dark" onclick="shadowRepeat()">⟳ 重复这段</button>
+      <button class="btn btn-ghost" onclick="shadowNext()">→ 下一段</button>
+      <button class="btn btn-ghost" id="shadow-sub-btn" onclick="shadowToggleSub()">字幕 👁</button>
+      <button class="btn btn-ghost" onclick="shadowIdx=0;shadowPlay()">↺ 重头开始</button>
+      <div class="shadow-progress" id="shadow-progress"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- Bottom Nav (mobile) -->
+<nav class="bottom-nav">
+  <button class="bn-item active" data-page="home" onclick="nav('home')">
+    <span class="bn-ico">🏠</span><span class="bn-label">主页</span>
+  </button>
+  <button class="bn-item" data-page="review" onclick="nav('review')">
+    <span class="bn-ico"><span class="bn-badge" id="bn-badge">🔄</span></span>
+    <span class="bn-label">复习</span>
+  </button>
+  <button class="bn-item" data-page="library" onclick="nav('library')">
+    <span class="bn-ico">📚</span><span class="bn-label">卡片库</span>
+  </button>
+  <button class="bn-item" data-page="add" onclick="nav('add')">
+    <span class="bn-ico">＋</span><span class="bn-label">添加</span>
+  </button>
+  <button class="bn-item" onclick="openSyncModal()">
+    <span class="bn-ico">☁️</span><span class="bn-label" id="bn-sync">同步</span>
+  </button>
+</nav>
+
+<!-- Sync Modal -->
+<div class="overlay" id="sync-overlay" onclick="if(event.target===this)closeSyncModal()">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hd">
+      <h3>☁️ 云同步设置</h3>
+      <button class="modal-cl" onclick="closeSyncModal()">×</button>
+    </div>
+    <div id="sync-body"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="modal-title">卡片详情</h3><button class="modal-cl" onclick="closeModal()">×</button></div>
+    <div id="modal-body"></div>
+    <div style="margin-top:22px;display:flex;gap:8px" id="modal-footer">
+      <button class="btn btn-dark" onclick="startEdit()">✏️ 编辑</button>
+      <button class="btn btn-ghost" onclick="delCard()" style="color:var(--red)">删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  Storage
+// ══════════════════════════════════════════════
+const KEY = 'eng_cards_v1';
+const SKEY = 'eng_streak_v1';
+const SCENES = ['居家','机场','酒店','餐厅','购物','交通','观光','医疗','社交','通用'];
+
+const db = {
+  all: () => JSON.parse(localStorage.getItem(KEY)||'[]'),
+  save: cards => localStorage.setItem(KEY, JSON.stringify(cards)),
+  add: card => { const c = db.all(); c.push(card); db.save(c); },
+  del: id => db.save(db.all().filter(c=>c.id!==id)),
+};
+
+// ══════════════════════════════════════════════
+//  SM-2
+// ══════════════════════════════════════════════
+function sm2(card, q) {
+  let {ef=2.5, iv=0, rp=0} = card;
+  ef = Math.max(1.3, ef + 0.1 - (5-q)*(0.08+(5-q)*0.02));
+  if (q >= 3) {
+    if (rp===0) iv = q>=5 ? 4 : 3;
+    else if (rp===1) iv = q>=5 ? 8 : 6;
+    else iv = Math.round(iv * ef);
+    rp++;
+  } else { rp=0; iv=1; }
+  const next = new Date();
+  next.setDate(next.getDate() + iv);
+  return { ef: Math.round(ef*1000)/1000, iv, rp, nextReview: next.toISOString().split('T')[0], lastReview: tod() };
+}
+
+function tod() { return new Date().toISOString().split('T')[0]; }
+function isDue(c) { return !c.nextReview || c.nextReview <= tod(); }
+function eid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function esc(s='') { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ══════════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════════
+let curPage='home', tf='all', sf='all', rq=[], ri=0, flipped=false, modalId=null;
+
+// ══════════════════════════════════════════════
+//  Nav
+// ══════════════════════════════════════════════
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('active', el.dataset.page===page));
+  document.querySelectorAll('.bn-item').forEach(el=>el.classList.toggle('active', el.dataset.page===page));
+  curPage = page;
+  if (page==='home') renderHome();
+  if (page==='review') startReview();
+  if (page==='library') renderLib();
+  if (page==='add') resetForms();
+  if (page==='shadow') initShadow();
+  updateBadge();
+}
+
+// ══════════════════════════════════════════════
+//  Home
+// ══════════════════════════════════════════════
+function renderHome() {
+  const cards = db.all(), due = cards.filter(isDue);
+  document.getElementById('home-date').textContent = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  document.getElementById('s-due').textContent = due.length;
+  document.getElementById('s-total').textContent = cards.length;
+  document.getElementById('s-streak').textContent = getStreak();
+  renderForecastChart(cards);
+  renderMemoryChart(cards);
+}
+
+// ── Chart helpers ──
+function smoothPath(pts) {
+  if (!pts.length) return '';
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length; i++) {
+    const cx = (pts[i-1].x + pts[i].x) / 2;
+    d += ` C ${cx} ${pts[i-1].y} ${cx} ${pts[i].y} ${pts[i].x} ${pts[i].y}`;
+  }
+  return d;
+}
+
+function makeSVG(pts, W, H, pL, pR, pT, pB, color, gradId) {
+  const cW = W-pL-pR, cH = H-pT-pB;
+  const line = smoothPath(pts);
+  const area = line + ` L ${pts[pts.length-1].x} ${pT+cH} L ${pts[0].x} ${pT+cH} Z`;
+  // grid lines
+  const gridY = [0,.5,1].map(f => {
+    const y = pT + cH - f*cH;
+    return `<line x1="${pL}" y1="${y}" x2="${pL+cW}" y2="${y}" stroke="#EAEAF0" stroke-width="1" stroke-dasharray="4,3"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="overflow:visible;display:block">
+    <defs>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0.01"/>
+      </linearGradient>
+    </defs>
+    ${gridY}
+    <path d="${area}" fill="url(#${gradId})"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function renderForecastChart(cards) {
+  const el = document.getElementById('chart-forecast'); if(!el) return;
+  const todayStr = tod();
+  const fmt = (y,m,day) => `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  const counts = {};
+  cards.forEach(c => { const d = c.nextReview || todayStr; counts[d] = (counts[d]||0) + 1; });
+  const maxCount = Math.max(...Object.values(counts), 1);
+
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const months = [{y:year,m:month}, {y: month===11?year+1:year, m:(month+1)%12}];
+  const dowNames = ['日','一','二','三','四','五','六'];
+
+  let html = '<div class="cal-wrap">';
+  months.forEach(({y,m}) => {
+    const startWeekday = new Date(y,m,1).getDay();
+    const totalDays = new Date(y,m+1,0).getDate();
+    html += `<div><div class="cal-month-title">${y}年${m+1}月</div>`;
+    html += `<div class="cal-dow">${dowNames.map(n=>`<span>${n}</span>`).join('')}</div>`;
+    html += '<div class="cal-grid">';
+    for (let i=0; i<startWeekday; i++) html += '<div class="cal-day empty"></div>';
+    for (let day=1; day<=totalDays; day++) {
+      const ds = fmt(y,m,day);
+      const count = counts[ds] || 0;
+      const isToday = ds === todayStr;
+      const isPast = ds < todayStr;
+      const cls = ['cal-day', isPast?'past':'', isToday?'today':'', count>0?'has':''].filter(Boolean).join(' ');
+      const waterPct = count>0 ? Math.round((count/maxCount)*100) : 0;
+      html += `<div class="${cls}"><div class="cd-water" style="height:${waterPct}%"></div><div class="cd-n">${day}</div>${count>0?`<div class="cd-c">${count}</div>`:''}</div>`;
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderMemoryChart(cards) {
+  const el = document.getElementById('chart-memory'); if(!el) return;
+  const reviewed = cards.filter(c=>(c.rp||0)>0);
+  const DAYS=30, W=520, H=120, pL=28, pR=8, pT=10, pB=28;
+  const cW=W-pL-pR, cH=H-pT-pB;
+
+  if (!reviewed.length) {
+    el.innerHTML = '<div class="empty" style="padding:24px"><p>复习过卡片后这里会显示记忆曲线</p></div>';
+    return;
+  }
+
+  // 对每个已复习卡片，用艾宾浩斯公式 R = e^(-t/S) 计算保留率
+  // stability S ≈ interval（天）
+  const retData = Array.from({length:DAYS+1},(_,t)=>{
+    const avg = reviewed.reduce((sum,c)=>{
+      const S = Math.max(c.iv||1, 1);
+      return sum + Math.exp(-t/S);
+    },0) / reviewed.length;
+    return {t, pct: Math.round(avg*100)};
+  });
+
+  const pts = retData.map(d=>({
+    x: pL+(d.t/DAYS)*cW,
+    y: pT+cH-(d.pct/100)*cH
+  }));
+
+  // milestone labels on curve
+  const milestones = [0,7,14,30].map(t=>{
+    const d = retData[t]; const p = pts[t];
+    const anchor = t===0?'start': t===30?'end':'middle';
+    return `<text x="${p.x}" y="${H-4}" text-anchor="${anchor}" font-size="10" fill="#8E8E93" font-weight="600">${t===0?'今天':t+'天'}</text>
+      <circle cx="${p.x}" cy="${p.y}" r="3" fill="#34AADC" stroke="white" stroke-width="1.5"/>
+      <text x="${p.x}" y="${p.y-8}" text-anchor="${anchor}" font-size="10" font-weight="700" fill="#34AADC">${d.pct}%</text>`;
+  }).join('');
+
+  const ylabels = [0,50,100].map(v=>{
+    const y=pT+cH-(v/100)*cH;
+    return `<text x="${pL-4}" y="${y+3}" text-anchor="end" font-size="9" fill="#8E8E93">${v}%</text>`;
+  }).join('');
+
+  const base = makeSVG(pts,W,H,pL,pR,pT,pB,'#34AADC','fgMem');
+  el.innerHTML = base.replace('</svg>',`${milestones}${ylabels}</svg>`);
+}
+
+function miniCard(c) {
+  const tl = {word:'单词',dialogue:'句子',phrase:'句子'}[c.type];
+  const ctLabel = {audio:'🎧',image:'🖼️',scene:'📍'}[c.challengeType||'audio'];
+  let title='';
+  if(c.type==='word') title=c.word;
+  if(c.type==='dialogue') title=c.title;
+  if(c.type==='phrase') title=c.phrase;
+  const dueStr = isDue(c) ? '<span class="due-dot"></span>今日待复习' : '下次：'+c.nextReview;
+  return `<div class="card ${isDue(c)?'due':''}" onclick="openModal('${c.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span class="tb tb-${c.type}">${tl}</span>
+      <span style="font-size:11px;color:var(--muted)">${esc(c.scene)}</span>
+    </div>
+    <div class="ct">${esc(title)}</div>
+    <div class="cm" style="margin-top:10px">
+      <span class="cnr">${dueStr}</span>
+      <span style="font-size:13px">${ctLabel}</span>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  Text-to-Speech
+// ══════════════════════════════════════════════
+function speak(text, btnEl) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.88; u.pitch = 1;
+  if (btnEl) {
+    btnEl.classList.add('playing');
+    u.onend = () => btnEl.classList.remove('playing');
+  }
+  speechSynthesis.speak(u);
+}
+
+function getCardSpeakText(c) {
+  if (c.type==='word') return c.word + (c.example ? '. ' + c.example : '');
+  if (c.type==='dialogue') return (c.lines||[]).map(l=>l.text).join('. ');
+  if (c.type==='phrase') return c.phrase + (c.examples?.[0] ? '. ' + c.examples[0] : '');
+  return '';
+}
+
+// ══════════════════════════════════════════════
+//  Review
+// ══════════════════════════════════════════════
+function startReview() {
+  rq = db.all().filter(isDue);
+  ri = 0; flipped = false;
+  document.getElementById('mode-select-area').innerHTML = '';
+  renderReview();
+}
+
+function cardFrontHTML(c, sceneMode) {
+  if(sceneMode) {
+    if(c.type==='word') return `<div class="w-def" style="font-size:22px;font-weight:700;margin-bottom:6px">${esc(c.definition)}</div><div style="font-size:12px;color:var(--muted)">场景：${esc(c.scene)}</div>`;
+    if(c.type==='dialogue') return `<div style="font-size:18px;font-weight:600;margin-bottom:6px">${esc(c.title)}</div><div style="font-size:12px;color:var(--muted);margin-bottom:14px">场景：${esc(c.scene)}</div>`;
+    if(c.type==='phrase') return `<div class="p-main" style="font-size:20px">${esc(c.explanation)}</div>${c.usage?`<div class="p-usage" style="margin-top:6px">场景：${esc(c.usage)}</div>`:`<div style="font-size:12px;color:var(--muted)">场景：${esc(c.scene)}</div>`}`;
+  }
+  if(c.type==='word') return `<div class="w-main">${esc(c.word)}</div>${c.phonetic?`<div class="w-ph">${esc(c.phonetic)}</div>`:''}<div style="font-size:12px;color:var(--muted)">场景：${esc(c.scene)}</div>`;
+  if(c.type==='dialogue'){const fl=c.lines?.[0];return `<div style="font-size:18px;font-weight:600;margin-bottom:6px">${esc(c.title)}</div><div style="font-size:12px;color:var(--muted);margin-bottom:14px">场景：${esc(c.scene)}</div>${fl?dlLine(fl):''}`;}
+  if(c.type==='phrase') return `<div class="p-main">${esc(c.phrase)}</div><div style="font-size:12px;color:var(--muted)">场景：${esc(c.scene)}</div>`;
+  return '';
+}
+
+function cardBackHTML(c) {
+  if(c.type==='word') return `<div class="w-def">${esc(c.definition)}</div>${c.example?`<div class="w-ex">"${esc(c.example)}"</div>`:''}${c.exampleCn?`<div style="font-size:13px;color:var(--muted);margin-top:5px">${esc(c.exampleCn)}</div>`:''}`;
+  if(c.type==='dialogue') return (c.lines||[]).map(dlLine).join('');
+  if(c.type==='phrase') return `<div class="p-exp">${esc(c.explanation)}</div>${c.usage?`<div class="p-usage">使用场景：${esc(c.usage)}</div>`:''}`+(c.examples||[]).map(e=>`<div class="p-ex">• ${esc(e)}</div>`).join('');
+  return '';
+}
+
+function ratingsHTML() {
+  return `<div class="ratings" id="rtns" style="display:none">
+    <div class="rb rb0" onclick="rate(0)"><div class="rl">😵 完全不记得</div><div class="rs">明天再来</div></div>
+    <div class="rb rb1" onclick="rate(2)"><div class="rl">😅 有些模糊</div><div class="rs">明天再来</div></div>
+    <div class="rb rb2" onclick="rate(4)"><div class="rl">😊 记得</div><div class="rs">间隔拉长</div></div>
+    <div class="rb rb3" onclick="rate(5)"><div class="rl">🎯 很熟练</div><div class="rs">大幅拉长</div></div>
+  </div>`;
+}
+
+function renderReview() {
+  const el = document.getElementById('review-content');
+  if (!rq[ri]) {
+    el.innerHTML = `<div class="done-wrap"><div class="di">${rq.length?'✅':'📭'}</div>
+      <h2>${rq.length?'复习完成！':'暂无待复习卡片'}</h2>
+      <p style="color:var(--muted);margin:10px 0 22px">共复习了 ${ri} 张卡片</p>
+      <button class="btn btn-dark" onclick="nav('home')">返回主页</button></div>`;
+    if(ri>0) updStreak();
+    return;
+  }
+  const c = rq[ri];
+  const tl = {word:'单词',dialogue:'句子',phrase:'句子'}[c.type];
+  const speakText = getCardSpeakText(c);
+  const ct = c.challengeType || 'audio';
+
+  // ── 听力模式 ──
+  if (ct === 'audio') {
+    const replayBtn = c.audioData
+      ? `<button class="speak-btn" style="margin-top:12px" onclick="event.stopPropagation();playAudioData(rq[ri].audioData,this)">🔊 再听一遍</button>`
+      : `<button class="speak-btn" style="margin-top:12px" onclick="speak('${speakText.replace(/'/g,"\\'")}',this)">🔊 再听一遍</button>`;
+    el.innerHTML = `<div class="review-wrap">
+      <div class="prog">${ri+1} / ${rq.length} · 🎧 听力模式</div>
+      <div class="flashcard">
+        <span class="tb tb-${c.type} cf-badge">${tl}</span>
+        <div class="listen-front" onclick="flip()">
+          <div class="listen-scene">场景：${esc(c.scene)}</div>
+          <button class="listen-play" id="play-btn" onclick="event.stopPropagation();doPlay()">🔊</button>
+          <div class="listen-hint">点击播放，理解后点卡片翻面</div>
+        </div>
+        <div class="card-back-sep" id="back">
+          ${cardFrontHTML(c)}
+          <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">${cardBackHTML(c)}</div>
+          ${replayBtn}
+        </div>
+      </div>
+      <div class="flip-hint" id="fhint">播放后点卡片翻面</div>
+      ${ratingsHTML()}
+    </div>`;
+    setTimeout(()=>doPlay(), 400);
+    return;
+  }
+
+  // ── 图像卡片 ──
+  if (ct === 'image') {
+    const imgHTML = c.imageUrl
+      ? `<img class="card-img" src="${esc(c.imageUrl)}" onerror="this.style.display='none'">`
+      : `<div class="no-img-hint">📷 此卡片没有图片<br><span style="font-size:12px">可编辑卡片添加图片网址</span></div>`;
+    el.innerHTML = `<div class="review-wrap">
+      <div class="prog">${ri+1} / ${rq.length} &nbsp;·&nbsp; 🖼️ 图像卡片</div>
+      <div class="flashcard" onclick="flip()">
+        <span class="tb tb-${c.type} cf-badge">${tl}</span>
+        <div class="img-front">${imgHTML}
+          <div style="font-size:13px;color:var(--muted);text-align:center">看图说出对应词语或句子，再点卡片核对</div>
+        </div>
+        <div class="card-back-sep" id="back">
+          ${cardFrontHTML(c)}
+          <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">${cardBackHTML(c)}</div>
+          <button class="speak-btn" style="margin-top:12px" onclick="event.stopPropagation();speak('${speakText.replace(/'/g,"\\'")}',this)">🔊 朗读</button>
+        </div>
+      </div>
+      <div class="flip-hint" id="fhint">说完后点卡片查看答案</div>
+      ${ratingsHTML()}
+    </div>`;
+    return;
+  }
+
+  // ── 场景卡片 ──
+  if (ct === 'scene') {
+    const prompt = c.scenePrompt || '（未设置场景描述）';
+    const imgHTML = c.imageUrl
+      ? `<img class="card-img" src="${esc(c.imageUrl)}" onerror="this.style.display='none'">`
+      : '';
+    const audioBtn = `<button class="listen-play" style="width:56px;height:56px;font-size:20px;flex-shrink:0" id="play-btn" onclick="event.stopPropagation();doPlay()">🔊</button>`;
+    const sceneFront = c.imageUrl
+      ? `<div class="img-front">${imgHTML}
+          <div style="margin-top:8px">${cardFrontHTML(c, true)}</div>
+          ${audioBtn}
+          <div style="font-size:13px;color:var(--muted);text-align:center">看图听音说英文，点卡片核对</div>
+        </div>`
+      : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;gap:16px;text-align:center">
+          ${cardFrontHTML(c, true)}
+          ${audioBtn}
+          <div style="font-size:13px;color:var(--muted)">看中文听音说英文，点卡片核对</div>
+        </div>`;
+    el.innerHTML = `<div class="review-wrap">
+      <div class="prog">${ri+1} / ${rq.length} &nbsp;·&nbsp; 📍 场景卡片</div>
+      <div class="flashcard" onclick="flip()">
+        <span class="tb tb-${c.type} cf-badge">${tl}</span>
+        ${sceneFront}
+        <div class="card-back-sep" id="back">
+          ${cardFrontHTML(c)}
+          <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">${cardBackHTML(c)}</div>
+          <button class="speak-btn" style="margin-top:12px" onclick="event.stopPropagation();speak('${speakText.replace(/'/g,"\\'")}',this)">🔊 朗读标准音</button>
+        </div>
+      </div>
+      <div class="flip-hint" id="fhint">说完后点卡片查看标准答案</div>
+      ${ratingsHTML()}
+    </div>`;
+    return;
+  }
+
+  // ── 音频卡片（默认） ──
+  el.innerHTML = `<div class="review-wrap">
+    <div class="prog">${ri+1} / ${rq.length} &nbsp;·&nbsp; 🎧 音频卡片</div>
+    <div class="flashcard">
+      <span class="tb tb-${c.type} cf-badge">${tl}</span>
+      <div class="listen-front" onclick="flip()">
+        <div class="listen-scene">场景：${esc(c.scene)}</div>
+        <button class="listen-play" id="play-btn" onclick="event.stopPropagation();doPlay()">🔊</button>
+        <div class="listen-hint">点击播放，理解后点卡片翻面</div>
+      </div>
+      <div class="card-back-sep" id="back">
+        ${cardFrontHTML(c)}
+        <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">${cardBackHTML(c)}</div>
+        <button class="speak-btn" style="margin-top:12px" onclick="speak('${speakText.replace(/'/g,"\\'")}',this)">🔊 再听一遍</button>
+      </div>
+    </div>
+    <div class="flip-hint" id="fhint">播放后点卡片翻面</div>
+    ${ratingsHTML()}
+  </div>`;
+  setTimeout(()=>doPlay(), 400);
+}
+
+function doPlay() {
+  const c = rq[ri]; if(!c) return;
+  const btn = document.getElementById('play-btn');
+  if (c.audioData) {
+    if (window._curAudio) { window._curAudio.pause(); window._curAudio = null; }
+    const audio = new Audio(c.audioData);
+    window._curAudio = audio;
+    if(btn) btn.classList.add('playing');
+    audio.onended = () => { if(btn) btn.classList.remove('playing'); window._curAudio = null; };
+    audio.play();
+  } else {
+    if(btn) btn.classList.add('playing');
+    const u = new SpeechSynthesisUtterance(getCardSpeakText(c));
+    u.lang='en-US'; u.rate=0.85;
+    u.onend = () => { if(btn) btn.classList.remove('playing'); };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+}
+
+function playAudioData(audioData, btnEl) {
+  if (window._curAudio) { window._curAudio.pause(); window._curAudio = null; }
+  const audio = new Audio(audioData);
+  window._curAudio = audio;
+  if(btnEl) btnEl.classList.add('playing');
+  audio.onended = () => { if(btnEl) btnEl.classList.remove('playing'); window._curAudio = null; };
+  audio.play();
+}
+
+function dlLine(l) {
+  const cls = l.speaker==='A'?'spa':'spb';
+  return `<div class="dl-line"><span class="sp ${cls}">${esc(l.speaker)}</span><div><div class="dl-text">${esc(l.text)}</div>${l.translation?`<div class="dl-tr">${esc(l.translation)}</div>`:''}</div></div>`;
+}
+
+function flip() {
+  if(flipped) return;
+  flipped=true;
+  speechSynthesis.cancel();
+  document.getElementById('back').classList.add('show');
+  document.getElementById('fhint').style.display='none';
+  document.getElementById('rtns').style.display='grid';
+}
+
+function rate(q) {
+  const cards=db.all(), idx=cards.findIndex(c=>c.id===rq[ri].id);
+  if(idx!==-1){ Object.assign(cards[idx], sm2(cards[idx],q)); db.save(cards); }
+  ri++; flipped=false; renderReview(); updateBadge();
+}
+
+// ══════════════════════════════════════════════
+//  Library
+// ══════════════════════════════════════════════
+function renderLib() {
+  const cards=db.all();
+  const scenes=['all',...new Set(cards.map(c=>c.scene))];
+  document.getElementById('scene-chips').innerHTML=scenes.map(s=>`<div class="chip ${sf===s?'active':''}" onclick="setSF('${s}',this)">${s==='all'?'全部场景':s}</div>`).join('');
+  let f=cards;
+  f=f.filter(c=>matchTF(c));
+  if(sf!=='all') f=f.filter(c=>c.scene===sf);
+  const g=document.getElementById('lib-grid');
+  g.innerHTML = f.length ? f.map(miniCard).join('') : '<div class="empty" style="grid-column:1/-1"><div class="ei">📭</div><h3>没有找到卡片</h3><p>更换筛选或添加新卡片</p></div>';
+}
+
+function setTF(t,el){tf=t;document.querySelectorAll('#type-chips .chip').forEach(e=>e.classList.remove('active'));el.classList.add('active');renderLib();}
+function matchTF(card){
+  if(tf==='all') return true;
+  if(tf==='word') return card.type==='word';
+  if(tf==='sentence') return card.type==='dialogue'||card.type==='phrase';
+  return card.type===tf;
+}
+function setSF(s,el){sf=s;document.querySelectorAll('#scene-chips .chip').forEach(e=>e.classList.remove('active'));el.classList.add('active');renderLib();}
+
+// ══════════════════════════════════════════════
+//  Add Card
+// ══════════════════════════════════════════════
+function pickCT(prefix, el) {
+  const ct = el.dataset.ct;
+  document.querySelectorAll('#'+prefix+'ct .ct-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById(prefix+'-img-wrap').style.display = ct==='image' ? 'block' : 'none';
+  document.getElementById(prefix+'-sc-wrap').style.display  = ct==='scene' ? 'block' : 'none';
+}
+
+function switchTab(t,el){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));el.classList.add('active');
+  ['word','dialogue','phrase'].forEach(x=>document.getElementById('f-'+x).style.display=x===t?'block':'none');
+  if(t==='dialogue'&&!document.getElementById('dl-rows').children.length){addDRow();addDRow();}
+}
+
+function addDRow(){
+  const d=document.createElement('div');d.className='dl-row';
+  d.innerHTML=`<select class="fs"><option>A</option><option>B</option></select><input class="fi" placeholder="英文内容"><input class="fi" placeholder="中文翻译（可选）"><button class="rm" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('dl-rows').appendChild(d);
+}
+
+function addPEx(){
+  const d=document.createElement('div');d.className='ex-row';
+  d.innerHTML=`<input class="fi" placeholder="英文例句"><button class="rm" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('pex-rows').appendChild(d);
+}
+
+function resetForms(){
+  ['ww','wph','wd','we','wec','wimg','wscenep','dt','dimg','dscenep','pp','pe','pu','pimg','pscenep'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Reset challenge type selectors to default (audio)
+  ['w','d','p'].forEach(pre=>{
+    document.querySelectorAll('#'+pre+'ct .ct-opt').forEach(e=>e.classList.remove('selected'));
+    const first=document.querySelector('#'+pre+'ct .ct-opt');if(first)first.classList.add('selected');
+    document.getElementById(pre+'-img-wrap').style.display='none';
+    document.getElementById(pre+'-sc-wrap').style.display='none';
+  });
+  document.getElementById('dl-rows').innerHTML='';
+  document.getElementById('pex-rows').innerHTML=`<div class="ex-row"><input class="fi" placeholder="e.g. Could you please show me the menu?"><button class="rm" onclick="this.parentElement.remove()">×</button></div>`;
+}
+
+function save(type){
+  const base={id:eid(),type,created:new Date().toISOString(),ef:2.5,iv:0,rp:0,nextReview:tod(),lastReview:null};
+  if(type==='word'){
+    const w=v('ww'),d=v('wd');if(!w||!d){toast('请填写单词和释义');return;}
+    const wct=document.querySelector('#wct .ct-opt.selected')?.dataset.ct||'audio';
+    Object.assign(base,{word:w,phonetic:v('wph'),definition:d,example:v('we'),exampleCn:v('wec'),scene:document.getElementById('wsc').value,challengeType:wct,imageUrl:v('wimg'),scenePrompt:v('wscenep')});
+  }
+  if(type==='dialogue'){
+    const t=v('dt');if(!t){toast('请填写标题');return;}
+    const lines=[];
+    document.querySelectorAll('#dl-rows .dl-row').forEach(r=>{
+      const inp=r.querySelectorAll('input');const sel=r.querySelector('select');
+      const tx=inp[0].value.trim();if(tx)lines.push({speaker:sel.value,text:tx,translation:inp[1].value.trim()});
+    });
+    if(lines.length<2){toast('请至少添加两行对话');return;}
+    const dct=document.querySelector('#dct .ct-opt.selected')?.dataset.ct||'audio';
+    Object.assign(base,{title:t,lines,scene:document.getElementById('dsc').value,challengeType:dct,imageUrl:v('dimg'),scenePrompt:v('dscenep')});
+  }
+  if(type==='phrase'){
+    const p=v('pp'),e=v('pe');if(!p||!e){toast('请填写句型和解释');return;}
+    const examples=[];
+    document.querySelectorAll('#pex-rows .ex-row input').forEach(i=>{const x=i.value.trim();if(x)examples.push(x);});
+    const pct=document.querySelector('#pct .ct-opt.selected')?.dataset.ct||'audio';
+    Object.assign(base,{phrase:p,explanation:e,usage:v('pu'),examples,scene:document.getElementById('psc').value,challengeType:pct,imageUrl:v('pimg'),scenePrompt:v('pscenep')});
+  }
+  db.add(base); toast('卡片已保存 ✓'); resetForms(); updateBadge(); updateSceneNav();
+}
+
+function v(id){return (document.getElementById(id)?.value||'').trim();}
+
+// ══════════════════════════════════════════════
+//  Import Cards
+// ══════════════════════════════════════════════
+function importCards(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const incoming = JSON.parse(e.target.result);
+      if (!Array.isArray(incoming)) throw new Error('格式错误');
+      const existing = db.all();
+      const existingIds = new Set(existing.map(c => c.id));
+      const newCards = incoming.filter(c => !existingIds.has(c.id));
+      db.save([...existing, ...newCards]);
+      updateBadge(); updateSceneNav(); renderLib();
+      toast(`✅ 导入成功：${newCards.length} 张新卡片`);
+    } catch(err) {
+      toast('❌ 导入失败，请检查文件格式');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// ══════════════════════════════════════════════
+//  Modal
+// ══════════════════════════════════════════════
+function openModal(id){
+  const c=db.all().find(x=>x.id===id);if(!c)return;
+  modalId=id;
+  document.getElementById('modal-title').textContent={word:'单词',dialogue:'对话',phrase:'句型'}[c.type]+'卡片';
+  let h='';
+  if(c.type==='word'){
+    h=`<div style="font-size:26px;font-weight:700;margin-bottom:5px">${esc(c.word)}</div>
+    ${c.phonetic?`<div style="font-size:14px;color:var(--muted);margin-bottom:8px">${esc(c.phonetic)}</div>`:''}
+    <div style="font-size:15px;margin-bottom:10px">${esc(c.definition)}</div>
+    ${c.example?`<div style="font-size:14px;color:var(--muted);font-style:italic">"${esc(c.example)}"</div>`:''}
+    ${c.exampleCn?`<div style="font-size:13px;color:var(--muted);margin-top:4px">${esc(c.exampleCn)}</div>`:''}`;
+  }
+  if(c.type==='dialogue'){
+    h=`<div style="font-size:18px;font-weight:600;margin-bottom:14px">${esc(c.title)}</div>`+(c.lines||[]).map(dlLine).join('');
+  }
+  if(c.type==='phrase'){
+    h=`<div style="font-size:20px;font-weight:600;margin-bottom:8px">${esc(c.phrase)}</div>
+    <div style="font-size:14px;margin-bottom:6px">${esc(c.explanation)}</div>
+    ${c.usage?`<div style="font-size:13px;color:var(--muted);margin-bottom:10px">${esc(c.usage)}</div>`:''}`+(c.examples||[]).map(e=>`<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:4px">• ${esc(e)}</div>`).join('');
+  }
+  h+=`<div class="divider"></div>
+  <div class="meta-grid">
+    <div><div class="mk">场景</div><div class="mv">${esc(c.scene)}</div></div>
+    <div><div class="mk">复习次数</div><div class="mv">${c.rp||0} 次</div></div>
+    <div><div class="mk">下次复习</div><div class="mv">${c.nextReview||'今天'}</div></div>
+    <div><div class="mk">当前间隔</div><div class="mv">${c.iv||0} 天</div></div>
+    <div><div class="mk">熟练度</div><div class="mv">${(c.ef||2.5).toFixed(1)}</div></div>
+    <div><div class="mk">添加日期</div><div class="mv">${(c.created||'').split('T')[0]}</div></div>
+  </div>`;
+  document.getElementById('modal-body').innerHTML=h;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('overlay').classList.remove('open');modalId=null;}
+
+function delCard(){
+  if(!modalId)return;
+  if(!confirm('确定删除这张卡片？'))return;
+  db.del(modalId);closeModal();toast('已删除');
+  updateBadge();updateSceneNav();
+  if(curPage==='library')renderLib();
+  if(curPage==='home')renderHome();
+}
+
+function startEdit(){
+  const c=db.all().find(x=>x.id===modalId); if(!c) return;
+  const sceneOpts=SCENES.map(s=>`<option value="${s}"${c.scene===s?' selected':''}>${s}</option>`).join('');
+  const ctOpts=[['audio','🎧 音频卡片'],['image','🖼️ 图像卡片'],['scene','📍 场景卡片']]
+    .map(([v,l])=>`<option value="${v}"${(c.challengeType||'audio')===v?' selected':''}>${l}</option>`).join('');
+
+  let fields='';
+  if(c.type==='word'){
+    fields=`
+      <div class="fg"><label class="fl">单词</label><input class="fi" id="e-word" value="${esc(c.word||'')}"></div>
+      <div class="fg"><label class="fl">音标</label><input class="fi" id="e-phonetic" value="${esc(c.phonetic||'')}"></div>
+      <div class="fg"><label class="fl">中文释义</label><input class="fi" id="e-definition" value="${esc(c.definition||'')}"></div>
+      <div class="fg"><label class="fl">英文例句</label><textarea class="ft" id="e-example" style="min-height:60px">${esc(c.example||'')}</textarea></div>
+      <div class="fg"><label class="fl">例句翻译</label><input class="fi" id="e-exampleCn" value="${esc(c.exampleCn||'')}"></div>`;
+  } else if(c.type==='dialogue'){
+    const linesHTML=(c.lines||[]).map((l,i)=>`
+      <div class="dl-row" id="el-${i}">
+        <select class="fs"><option${l.speaker==='A'?' selected':''}>A</option><option${l.speaker==='B'?' selected':''}>B</option></select>
+        <input class="fi" value="${esc(l.text||'')}">
+        <input class="fi" value="${esc(l.translation||'')}">
+        <button class="rm" onclick="this.parentElement.remove()">×</button>
+      </div>`).join('');
+    fields=`
+      <div class="fg"><label class="fl">对话标题</label><input class="fi" id="e-title" value="${esc(c.title||'')}"></div>
+      <div class="fg"><label class="fl">对话内容</label><div id="e-lines">${linesHTML}</div>
+        <button class="add-line" onclick="addEditLine()">＋ 添加一行</button></div>`;
+  } else {
+    const exHTML=(c.examples||[]).map(ex=>`
+      <div class="ex-row"><input class="fi" value="${esc(ex)}"><button class="rm" onclick="this.parentElement.remove()">×</button></div>`).join('');
+    fields=`
+      <div class="fg"><label class="fl">句型 / 短语</label><input class="fi" id="e-phrase" value="${esc(c.phrase||'')}"></div>
+      <div class="fg"><label class="fl">中文解释</label><input class="fi" id="e-explanation" value="${esc(c.explanation||'')}"></div>
+      <div class="fg"><label class="fl">使用场景说明</label><input class="fi" id="e-usage" value="${esc(c.usage||'')}"></div>
+      <div class="fg"><label class="fl">例句</label><div id="e-examples">${exHTML}</div>
+        <button class="add-line" onclick="addEditExample()">＋ 添加例句</button></div>
+      <div class="fg"><label class="fl">场景提示（复习时显示）</label>
+        <textarea class="ft" id="e-scenePrompt" style="min-height:56px">${esc(c.scenePrompt||'')}</textarea></div>`;
+  }
+
+  document.getElementById('modal-body').innerHTML=`
+    ${fields}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="fl">场景</label><select class="fs" id="e-scene">${sceneOpts}</select></div>
+      <div class="fg"><label class="fl">复习方式</label><select class="fs" id="e-ct">${ctOpts}</select></div>
+    </div>
+    <div class="fg"><label class="fl">图片网址（可选）</label><input class="fi" id="e-img" value="${esc(c.imageUrl||'')}"></div>`;
+
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-dark" onclick="saveEdit()">保存</button>
+    <button class="btn btn-ghost" onclick="openModal('${c.id}')">取消</button>`;
+}
+
+function addEditLine(){
+  const d=document.createElement('div'); d.className='dl-row';
+  d.innerHTML=`<select class="fs"><option>A</option><option>B</option></select><input class="fi" placeholder="英文内容"><input class="fi" placeholder="中文翻译"><button class="rm" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('e-lines').appendChild(d);
+}
+
+function addEditExample(){
+  const d=document.createElement('div'); d.className='ex-row';
+  d.innerHTML=`<input class="fi" placeholder="英文例句"><button class="rm" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('e-examples').appendChild(d);
+}
+
+function saveEdit(){
+  const cards=db.all(); const idx=cards.findIndex(c=>c.id===modalId); if(idx===-1) return;
+  const c=cards[idx];
+  c.scene=document.getElementById('e-scene').value;
+  c.challengeType=document.getElementById('e-ct').value;
+  c.imageUrl=(document.getElementById('e-img').value||'').trim();
+
+  if(c.type==='word'){
+    c.word=(document.getElementById('e-word').value||'').trim();
+    c.phonetic=(document.getElementById('e-phonetic').value||'').trim();
+    c.definition=(document.getElementById('e-definition').value||'').trim();
+    c.example=(document.getElementById('e-example').value||'').trim();
+    c.exampleCn=(document.getElementById('e-exampleCn').value||'').trim();
+  } else if(c.type==='dialogue'){
+    c.title=(document.getElementById('e-title').value||'').trim();
+    c.lines=[];
+    document.querySelectorAll('#e-lines .dl-row').forEach(row=>{
+      const sel=row.querySelector('select');
+      const ins=row.querySelectorAll('input');
+      const text=(ins[0].value||'').trim();
+      if(text) c.lines.push({speaker:sel.value,text,translation:(ins[1].value||'').trim()});
+    });
+  } else {
+    c.phrase=(document.getElementById('e-phrase').value||'').trim();
+    c.explanation=(document.getElementById('e-explanation').value||'').trim();
+    c.usage=(document.getElementById('e-usage').value||'').trim();
+    c.scenePrompt=(document.getElementById('e-scenePrompt').value||'').trim();
+    c.examples=[];
+    document.querySelectorAll('#e-examples .ex-row input').forEach(i=>{
+      const val=(i.value||'').trim(); if(val) c.examples.push(val);
+    });
+  }
+
+  db.save(cards); toast('✓ 已保存');
+  openModal(modalId);
+  updateSceneNav();
+  if(curPage==='library') renderLib();
+}
+
+// ══════════════════════════════════════════════
+//  Streak
+// ══════════════════════════════════════════════
+function getStreak(){return (JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}').s);}
+function updStreak(){
+  const data=JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}');
+  const t=tod();if(data.d===t)return;
+  const yest=new Date();yest.setDate(yest.getDate()-1);
+  const yd=yest.toISOString().split('T')[0];
+  data.s=(data.d===yd)?data.s+1:1;data.d=t;
+  localStorage.setItem(SKEY,JSON.stringify(data));
+}
+
+// ══════════════════════════════════════════════
+//  Helpers
+// ══════════════════════════════════════════════
+function updateBadge(){
+  const n=db.all().filter(isDue).length;
+  const b=document.getElementById('badge');
+  b.textContent=n;b.style.display=n?'inline-block':'none';
+}
+
+function updateSceneNav(){
+  const scenes=[...new Set(db.all().map(c=>c.scene))];
+  document.getElementById('scene-nav').innerHTML=scenes.map(s=>`<div class="sb-item" onclick="sf='${s}';nav('library')"><span class="ico">📁</span>${s}</div>`).join('');
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+// ══════════════════════════════════════════════
+//  Cloud Sync (JSONBin.io)
+// ══════════════════════════════════════════════
+const SYNC_KEY = 'eng_sync_v1';
+function getSyncCfg() { return JSON.parse(localStorage.getItem(SYNC_KEY)||'null'); }
+function saveSyncCfg(c) { localStorage.setItem(SYNC_KEY, JSON.stringify(c)); }
+// 清除复制时混入的不可见Unicode字符，只保留ASCII可见字符
+function cleanKey(s) { return s.replace(/[^\x20-\x7E]/g,'').trim(); }
+
+function openSyncModal() {
+  const cfg = getSyncCfg();
+  const el = document.getElementById('sync-body');
+  if (!cfg) {
+    el.innerHTML = `
+      <p style="font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:18px">
+        云同步使用 <b style="color:var(--text)">JSONBin.io</b> 免费服务存储数据，<br>
+        手机和电脑共用同一份卡片库，无需手动传文件。
+      </p>
+      <div style="background:var(--sb);border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px;line-height:1.9">
+        <b>第一步</b>：打开 <span style="color:var(--accent)">jsonbin.io</span> → 点右上角 Sign Up 注册免费账号<br>
+        <b>第二步</b>：登录后点右上角头像 → API Keys → 复制 <b>Secret Key</b><br>
+        <b>第三步</b>：粘贴到下方，点「初始化同步」
+      </div>
+      <div class="fg"><label class="fl">Secret Key（以 $2b$ 开头）</label>
+        <input class="fi" id="sync-apikey" placeholder="粘贴你的 Secret Key（$2a$ 或 $2b$ 开头均可）" style="font-family:monospace;font-size:13px" oninput="this.value=cleanKey(this.value)">
+      </div>
+      <button class="btn btn-dark" onclick="initSync()" style="width:100%">初始化同步</button>
+      <p id="sync-err" style="color:#E03E3E;font-size:13px;margin-top:10px;display:none"></p>`;
+  } else {
+    const lastSync = cfg.lastSync ? new Date(cfg.lastSync).toLocaleString('zh-CN') : '从未同步';
+    el.innerHTML = `
+      <div style="background:var(--sb);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;line-height:1.8">
+        <div><b>同步码</b>：<span style="font-family:monospace;color:var(--accent)">${cfg.binId}</span></div>
+        <div style="color:var(--muted)">上次同步：${lastSync}</div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+        在另一台设备打开网页后，点「☁️ 同步设置」→「已有同步码」，输入上方同步码即可关联。
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <button class="btn btn-dark" onclick="doUpload()" style="justify-content:center">↑ 上传到云端</button>
+        <button class="btn btn-ghost" onclick="doDownload()" style="justify-content:center">↓ 从云端下载</button>
+      </div>
+      <button class="btn btn-ghost" onclick="showJoinPanel()" style="font-size:12px">已有同步码，在此设备关联</button>
+      <button class="btn btn-ghost" onclick="resetSync()" style="font-size:12px;color:#E03E3E;margin-left:8px">解除同步</button>
+      <p id="sync-err" style="font-size:13px;margin-top:10px;display:none"></p>`;
+  }
+  document.getElementById('sync-overlay').classList.add('open');
+}
+
+function showJoinPanel() {
+  const el = document.getElementById('sync-body');
+  el.innerHTML = `
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">输入另一台设备上显示的同步码和 Secret Key，即可在此设备关联同一份数据。</p>
+    <div class="fg"><label class="fl">Secret Key</label>
+      <input class="fi" id="join-apikey" placeholder="$2b$10$xxxxxxxx..." style="font-family:monospace;font-size:13px">
+    </div>
+    <div class="fg"><label class="fl">同步码</label>
+      <input class="fi" id="join-binid" placeholder="64位字符串">
+    </div>
+    <button class="btn btn-dark" onclick="joinSync()" style="width:100%">关联并下载数据</button>
+    <p id="sync-err" style="color:#E03E3E;font-size:13px;margin-top:10px;display:none"></p>`;
+}
+
+function showSyncErr(msg) {
+  const el = document.getElementById('sync-err');
+  if(el){el.textContent=msg;el.style.display='block';}
+}
+
+async function initSync() {
+  const key = cleanKey(document.getElementById('sync-apikey').value);
+  if(!key){showSyncErr('请填写 Secret Key');return;}
+  const btn = event.target; btn.textContent='初始化中…'; btn.disabled=true;
+  try {
+    const r = await fetch('https://api.jsonbin.io/v3/b', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'english-learning'},
+      body: JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),lastSync:new Date().toISOString()})
+    });
+    if(!r.ok){const e=await r.json();throw new Error(e.message||'Key 无效，请检查后重试');}
+    const data = await r.json();
+    saveSyncCfg({apiKey:key, binId:data.metadata.id, lastSync:new Date().toISOString()});
+    updateSyncLabel();
+    openSyncModal();
+    toast('☁️ 同步初始化成功！');
+  } catch(e) { showSyncErr(e.message); btn.textContent='初始化同步'; btn.disabled=false; }
+}
+
+async function joinSync() {
+  const key = cleanKey(document.getElementById('join-apikey').value);
+  const binId = cleanKey(document.getElementById('join-binid').value);
+  if(!key||!binId){showSyncErr('请填写所有字段');return;}
+  const btn = event.target; btn.textContent='连接中…'; btn.disabled=true;
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{'X-Master-Key':key}});
+    if(!r.ok) throw new Error('同步码或 Key 有误，请检查');
+    const data = await r.json();
+    db.save(data.record.cards||[]);
+    if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
+    saveSyncCfg({apiKey:key, binId, lastSync:new Date().toISOString()});
+    updateSyncLabel(); updateBadge(); updateSceneNav();
+    closeSyncModal(); toast('☁️ 关联成功，数据已下载！');
+    if(curPage==='home')renderHome();
+  } catch(e) { showSyncErr(e.message); btn.textContent='关联并下载数据'; btn.disabled=false; }
+}
+
+async function doUpload() {
+  const cfg = getSyncCfg(); if(!cfg)return;
+  const btn = event.target; btn.textContent='上传中…'; btn.disabled=true;
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},
+      body:JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),lastSync:new Date().toISOString()})
+    });
+    if(!r.ok) throw new Error('上传失败，请检查网络');
+    cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
+    toast('↑ 上传成功！'); closeSyncModal();
+  } catch(e) { showSyncErr(e.message); btn.textContent='↑ 上传到云端'; btn.disabled=false; }
+}
+
+async function doDownload() {
+  const cfg = getSyncCfg(); if(!cfg)return;
+  const btn = event.target; btn.textContent='下载中…'; btn.disabled=true;
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:{'X-Master-Key':cfg.apiKey}});
+    if(!r.ok) throw new Error('下载失败，请检查网络');
+    const data = await r.json();
+    db.save(data.record.cards||[]);
+    if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
+    cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
+    updateBadge(); updateSceneNav();
+    if(curPage==='home')renderHome();
+    if(curPage==='library')renderLib();
+    toast('↓ 下载成功！'); closeSyncModal();
+  } catch(e) { showSyncErr(e.message); btn.textContent='↓ 从云端下载'; btn.disabled=false; }
+}
+
+function resetSync() {
+  if(!confirm('确定解除云同步？（本地数据不受影响）'))return;
+  localStorage.removeItem(SYNC_KEY);
+  updateSyncLabel(); openSyncModal();
+}
+
+function closeSyncModal() { document.getElementById('sync-overlay').classList.remove('open'); }
+
+function updateSyncLabel() {
+  const cfg = getSyncCfg();
+  document.getElementById('sync-status-label').textContent = cfg ? '已同步 ✓' : '同步设置';
+}
+
+// ══════════════════════════════════════════════
+//  Init: populate selects + seed sample cards
+// ══════════════════════════════════════════════
+(function init(){
+  ['wsc','dsc','psc'].forEach(id=>{
+    const sel=document.getElementById(id);
+    SCENES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+  });
+
+  updateBadge();updateSceneNav();updateSyncLabel();renderHome();
+})();
+
+// ══════════════════════════════════════════════
+//  Shadow Reading
+// ══════════════════════════════════════════════
+const SHADOW_SEGS = [{"start":0.0,"end":5.84,"english":"Hi guys, welcome back to your favorite airports in my bag. I have a work trip coming up","chinese":"大家好，欢迎回到我包里你们最喜欢的机场。我即将出差"},{"start":5.84,"end":9.92,"english":"And this is everything I pack into my carry-all. Let's get into it","chinese":"这就是我随身携带的所有东西。让我们开始吧"},{"start":10.96,"end":17.52,"english":"Starting with my Mimi friends. I think I spent like months trying on glasses before I found these they just work on my face","chinese":"从我的咪咪朋友开始。我想我花了好几个月试戴眼镜才发现它们只适合我的脸"},{"start":18.24,"end":22.8,"english":"It's free less to a shell how to find","chinese":"比外壳更免费，如何找到"},{"start":22.96,"end":27.68,"english":"Little notebook that I grabbed from museum at some point and just never stopped using I","chinese":"我在某个时候从博物馆抓起的小笔记本，并且从未停止使用它"},{"start":28.64,"end":34.0,"english":"Think I'm really into wired earphones lately. They are very vintage and very grounding","chinese":"我最近真的很喜欢有线耳机，它们非常复古而且很接地气"},{"start":35.44,"end":39.76,"english":"My toiletry pouch which has my toothbrush, which is a wooden one","chinese":"我的盥洗袋里有牙刷，是木制的"},{"start":40.8,"end":48.72,"english":"and melancholy deodorant stick, is tiny and smells amazing","chinese":"还有除臭棒，很小，闻起来很棒"},{"start":48.8,"end":50.8,"english":"and my liquid bandage","chinese":"还有我的液体绷带"},{"start":51.76,"end":58.44,"english":"Pink fun case very intentional it has a suction pad on the back, which is honestly so useful at the airport","chinese":"粉色手机壳非常用心，背面有吸盘，在机场真的超好用"},{"start":58.44,"end":63.76,"english":"I just stick my boarding pass or ID card or power bank to it and just go","chinese":"我只需把登机牌、身份证或充电宝贴上去就可以走了"},{"start":64.96,"end":68.0,"english":"Mary make her toad also very intentionally pink","chinese":"玛丽特意把她的蟾蜍也变成了粉红色"},{"start":68.8,"end":76.24,"english":"I always throw a photo bow back in my carry-all when I fly, you know, just in case you always end up needing more space than you ever know","chinese":"飞行时我总会在手提包里放一个折叠袋，以防万一需要更多空间"},{"start":76.56,"end":81.04,"english":"a Funko sheet mask","chinese":"一款 Funko 面膜"},{"start":81.12,"end":83.44,"english":"Long-flight hydration very important","chinese":"长途飞行补水非常重要"},{"start":84.64,"end":86.64,"english":"spare camera battery","chinese":"备用相机电池"},{"start":86.64,"end":92.96,"english":"I'm always filming so I need it and it also works as a power bank and my small bottle of water","chinese":"我一直在拍摄所以需要它，它还可以当充电宝用，还有我的小瓶水"},{"start":95.04,"end":97.52,"english":"Your MacBook is a work trip overall","chinese":"MacBook 是出差必备"},{"start":98.32,"end":102.96,"english":"A hard-earnable in my friend pick it out for me in turkey and my Milo","chinese":"这是朋友从土耳其帮我挑的，还有我的 Milo"},{"start":103.92,"end":106.4,"english":"That's everything. I'll see you guys in the next one","chinese":"这就是全部了，下期见"}];
+
+let _shadowIdx = 0;
+let _shadowSubVisible = false;
+let _shadowEndTimer = null;
+
+function shadowPlay() {
+  const seg = SHADOW_SEGS[_shadowIdx];
+  const vid = document.getElementById('shadow-video');
+  clearTimeout(_shadowEndTimer);
+  vid.currentTime = seg.start;
+  vid.play();
+  const ms = (seg.end - seg.start) * 1000 + 400;
+  _shadowEndTimer = setTimeout(() => vid.pause(), ms);
+  shadowRenderUI();
+}
+
+function shadowRepeat() { shadowPlay(); }
+
+function shadowNext() {
+  if (_shadowIdx < SHADOW_SEGS.length - 1) { _shadowIdx++; shadowPlay(); }
+  else { document.getElementById('shadow-en').textContent = '已完成全部句子！'; document.getElementById('shadow-zh').textContent = ''; }
+}
+
+function shadowToggleSub() {
+  _shadowSubVisible = !_shadowSubVisible;
+  document.getElementById('shadow-mask').classList.toggle('visible', _shadowSubVisible);
+  document.getElementById('shadow-sub-btn').textContent = _shadowSubVisible ? '字幕 🙈' : '字幕 👁';
+  const seg = SHADOW_SEGS[_shadowIdx] || {};
+  document.getElementById('shadow-zh').textContent = _shadowSubVisible ? (seg.chinese || '') : '';
+}
+
+function shadowRenderUI() {
+  const seg = SHADOW_SEGS[_shadowIdx] || {};
+  document.getElementById('shadow-en').textContent = seg.english || '';
+  document.getElementById('shadow-zh').textContent = _shadowSubVisible ? (seg.chinese || '') : '';
+  document.getElementById('shadow-progress').textContent = `${_shadowIdx + 1} / ${SHADOW_SEGS.length}`;
+}
+
+function initShadow() {
+  _shadowIdx = 0;
+  _shadowSubVisible = false;
+  document.getElementById('shadow-mask').classList.remove('visible');
+  document.getElementById('shadow-sub-btn').textContent = '字幕 👁';
+  document.getElementById('shadow-en').textContent = '点击「重复这段」播放第一句';
+  document.getElementById('shadow-zh').textContent = '';
+  document.getElementById('shadow-progress').textContent = `1 / ${SHADOW_SEGS.length}`;
+}
+</script>
+</body>
+</html>
