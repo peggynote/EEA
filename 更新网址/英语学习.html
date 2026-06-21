@@ -336,7 +336,7 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 .shadow-drop.loaded{border-style:solid;border-color:var(--green)}
 .shadow-player{position:relative;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9}
 .shadow-player video{width:100%;height:100%;display:block}
-.shadow-mask{position:absolute;left:0;right:0;bottom:0;height:38%;background:#000;transition:opacity .2s}
+.shadow-mask{position:absolute;left:0;right:0;bottom:0;height:16%;background:#000;transition:opacity .2s}
 .shadow-mask.visible{opacity:0}
 .shadow-sub-box{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;min-height:80px}
 .shadow-en{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:6px}
@@ -344,6 +344,24 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 .shadow-controls{display:flex;gap:10px;align-items:center}
 .shadow-progress{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto}
 .shadow-files{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.shadow-tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--border)}
+.shadow-tab{padding:10px 16px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.shadow-tab:hover{color:var(--text)}
+.shadow-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.shadow-video-card{cursor:pointer;transition:transform .15s}
+.shadow-video-card:hover{transform:translateY(-2px)}
+.shadow-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:#000;display:block;pointer-events:none}
+.shadow-speed{display:flex;gap:4px;background:rgba(255,255,255,.5);border-radius:10px;padding:3px}
+.speed-btn{padding:6px 10px;border:none;background:none;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.speed-btn.active{background:var(--accent);color:#fff}
+.preview-row{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.preview-n{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.preview-en,.preview-zh{width:100%;border:none;background:transparent;font-family:inherit;resize:none;line-height:1.5;padding:4px 0}
+.preview-en{font-size:15px;font-weight:600;color:var(--text)}
+.preview-zh{font-size:13px;color:var(--muted);margin-top:2px}
+.preview-en:focus,.preview-zh:focus{outline:none;background:rgba(88,86,214,.06);border-radius:6px}
+.lib-check{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;border:2px solid var(--accent);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);z-index:2}
+.lib-check.checked{background:var(--accent);color:#fff}
 }</style>
 </head>
 <body>
@@ -355,8 +373,7 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
   <div class="sb-item active" data-page="home" onclick="nav('home')"><span class="ico">🏠</span>主页</div>
   <div class="sb-item" data-page="review" onclick="nav('review')"><span class="ico">🔄</span>今日复习<span class="badge" id="badge">0</span></div>
   <div class="sb-item" data-page="library" onclick="nav('library')"><span class="ico">📚</span>卡片库</div>
-  <div class="sb-item" data-page="add" onclick="nav('add')"><span class="ico">＋</span>添加卡片</div>
-  <div class="sb-item" data-page="shadow" onclick="nav('shadow')"><span class="ico">🎬</span>影子跟读</div>
+  <div class="sb-item" data-page="shadow" onclick="nav('shadow')"><span class="ico">🎬</span>视频库</div>
   <div class="sb-label" style="margin-top:12px">按场景</div>
   <div id="scene-nav"></div>
   <div class="sb-label" style="margin-top:12px">云同步</div>
@@ -401,6 +418,11 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
       <label class="btn btn-ghost" style="cursor:pointer">📥 导入<input type="file" accept=".json" style="display:none" onchange="importCards(this)"></label>
       <button class="btn btn-dark" onclick="nav('add')">＋ 添加</button>
     </div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
+    <input class="fi" id="lib-search" placeholder="🔍 搜索中英文内容..." style="flex:1;max-width:320px" oninput="libQuery=this.value;renderLib()">
+    <button class="btn btn-ghost" id="lib-select-btn" onclick="toggleLibSelectMode()">选择</button>
+    <button class="btn" id="lib-delete-btn" style="display:none;background:var(--red);color:#fff" onclick="deleteLibSelected()">删除</button>
   </div>
   <div class="chips" id="type-chips">
     <div class="chip active" onclick="setTF('all',this)">全部</div>
@@ -490,25 +512,44 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 
 <!-- SHADOW READING -->
 <div class="page" id="page-shadow">
-  <h1>影子跟读</h1>
-  <p class="sub">逐句播放，跟读练习口语</p>
-  <div class="shadow-wrap">
-    <div class="shadow-player" id="shadow-player">
-      <video id="shadow-video" playsinline src="视频/全英文vlog-机场翻包.mp4"></video>
-      <div class="shadow-mask" id="shadow-mask"></div>
+
+  <!-- Video list -->
+  <div id="shadow-list-view">
+    <h1>视频库</h1>
+    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;margin-top:18px">
+      <input class="fi" id="shadow-search" placeholder="🔍 搜索标题/字幕内容..." style="flex:1;max-width:320px" oninput="shadowQuery=this.value;shadowRenderList()">
+      <button class="btn btn-ghost" id="shadow-select-btn" onclick="shadowToggleSelectMode()">选择</button>
+      <button class="btn" id="shadow-delete-btn" style="display:none;background:var(--red);color:#fff" onclick="shadowDeleteSelected()">删除</button>
+    </div>
+    <div class="grid" id="shadow-video-grid"></div>
+  </div>
+
+  <!-- Video detail / 3-stage learning -->
+  <div id="shadow-detail-view" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+      <button class="btn btn-ghost" onclick="shadowBackToList()">← 返回列表</button>
+      <h1 id="shadow-video-title" style="margin:0;font-size:20px;cursor:pointer" onclick="shadowEditTitle()" title="点击编辑名称"></h1>
+      <span style="font-size:13px;color:var(--muted);cursor:pointer" onclick="shadowEditTitle()">✏️</span>
+    </div>
+    <div class="shadow-tabs" id="shadow-tabs">
+      <div class="shadow-tab" data-stage="1" onclick="shadowSwitchStage(1)">1. 盲听全文</div>
+      <div class="shadow-tab" data-stage="2" onclick="shadowSwitchStage(2)">2. 逐句口译</div>
+      <div class="shadow-tab" data-stage="3" onclick="shadowSwitchStage(3)">3. 全文预览</div>
     </div>
 
-    <div class="shadow-sub-box" id="shadow-sub-box">
-      <div class="shadow-en" id="shadow-en">点击「开始」播放第一句</div>
-      <div class="shadow-zh" id="shadow-zh"></div>
+    <div class="shadow-wrap" id="shadow-wrap-12">
+      <div class="shadow-player" id="shadow-player">
+        <video id="shadow-video" playsinline></video>
+        <div class="shadow-mask" id="shadow-mask"></div>
+      </div>
+
+      <div class="shadow-sub-box" id="shadow-sub-box"></div>
+      <div class="shadow-controls" id="shadow-controls"></div>
     </div>
 
-    <div class="shadow-controls">
-      <button class="btn btn-dark" onclick="shadowRepeat()">⟳ 重复这段</button>
-      <button class="btn btn-ghost" onclick="shadowNext()">→ 下一段</button>
-      <button class="btn btn-ghost" id="shadow-sub-btn" onclick="shadowToggleSub()">字幕 👁</button>
-      <button class="btn btn-ghost" onclick="shadowIdx=0;shadowPlay()">↺ 重头开始</button>
-      <div class="shadow-progress" id="shadow-progress"></div>
+    <div id="shadow-preview-wrap" style="display:none;max-width:680px">
+      <p class="sub" style="margin-bottom:14px">可直接编辑中英文，修改会自动同步到「逐句口译」</p>
+      <div id="shadow-preview-list"></div>
     </div>
   </div>
 </div>
@@ -527,11 +568,8 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
   <button class="bn-item" data-page="library" onclick="nav('library')">
     <span class="bn-ico">📚</span><span class="bn-label">卡片库</span>
   </button>
-  <button class="bn-item" data-page="add" onclick="nav('add')">
-    <span class="bn-ico">＋</span><span class="bn-label">添加</span>
-  </button>
   <button class="bn-item" data-page="shadow" onclick="nav('shadow')">
-    <span class="bn-ico">🎬</span><span class="bn-label">跟读</span>
+    <span class="bn-ico">🎬</span><span class="bn-label">视频库</span>
   </button>
   <button class="bn-item" onclick="openSyncModal()">
     <span class="bn-ico">☁️</span><span class="bn-label" id="bn-sync">同步</span>
@@ -569,7 +607,7 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 // ══════════════════════════════════════════════
 const KEY = 'eng_cards_v1';
 const SKEY = 'eng_streak_v1';
-const SCENES = ['居家','机场','酒店','餐厅','购物','交通','观光','医疗','社交','通用'];
+const SCENES = ['居家','机场','酒店','餐厅','饮品店','购物','交通','观光','医疗','社交','通用'];
 
 const db = {
   all: () => JSON.parse(localStorage.getItem(KEY)||'[]'),
@@ -604,6 +642,7 @@ function esc(s='') { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 //  State
 // ══════════════════════════════════════════════
 let curPage='home', tf='all', sf='all', rq=[], ri=0, flipped=false, modalId=null;
+let libQuery='', libSelectMode=false, libSelected=new Set();
 
 // ══════════════════════════════════════════════
 //  Nav
@@ -768,6 +807,14 @@ function renderMemoryChart(cards) {
   el.innerHTML = base.replace('</svg>',`${milestones}${ylabels}</svg>`);
 }
 
+function cardSearchText(c) {
+  const parts = [c.scene];
+  if (c.type==='word') parts.push(c.word, c.definition, c.example, c.exampleCn, c.phonetic);
+  if (c.type==='dialogue') { parts.push(c.title); (c.lines||[]).forEach(l=>parts.push(l.text, l.translation)); }
+  if (c.type==='phrase') { parts.push(c.phrase, c.explanation, c.usage); (c.examples||[]).forEach(e=>parts.push(e)); }
+  return parts.filter(Boolean).join(' ').toLowerCase();
+}
+
 function miniCard(c) {
   const tl = {word:'单词',dialogue:'句子',phrase:'句子'}[c.type];
   const ctLabel = {audio:'🎧',image:'🖼️',scene:'📍'}[c.challengeType||'audio'];
@@ -776,7 +823,11 @@ function miniCard(c) {
   if(c.type==='dialogue') title=c.title;
   if(c.type==='phrase') title=c.phrase;
   const dueStr = isDue(c) ? '<span class="due-dot"></span>今日待复习' : '下次：'+c.nextReview;
-  return `<div class="card ${isDue(c)?'due':''}" onclick="openModal('${c.id}')">
+  const checked = libSelected.has(c.id);
+  const checkbox = libSelectMode ? `<div class="lib-check ${checked?'checked':''}">${checked?'✓':''}</div>` : '';
+  const clickFn = libSelectMode ? `toggleLibSelect('${c.id}')` : `openModal('${c.id}')`;
+  return `<div class="card ${isDue(c)?'due':''}" style="position:relative" onclick="${clickFn}">
+    ${checkbox}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span class="tb tb-${c.type}">${tl}</span>
       <span style="font-size:11px;color:var(--muted)">${esc(c.scene)}</span>
@@ -792,21 +843,28 @@ function miniCard(c) {
 // ══════════════════════════════════════════════
 //  Text-to-Speech
 // ══════════════════════════════════════════════
-function speak(text, btnEl) {
+function speak(text, btnEl) { speakWithPause(text, btnEl, 0.88); }
+
+// 文本中的 "/" 会被当作停顿点，朗读时在此处停顿约1秒（如 "go/leave" 会读作 go ⏸ leave）
+function speakWithPause(text, btnEl, rate=0.88) {
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US'; u.rate = 0.88; u.pitch = 1;
-  if (btnEl) {
-    btnEl.classList.add('playing');
-    u.onend = () => btnEl.classList.remove('playing');
+  const parts = text.split('/').map(p=>p.trim()).filter(Boolean);
+  if (btnEl) btnEl.classList.add('playing');
+  let i = 0;
+  function next() {
+    if (i >= parts.length) { if (btnEl) btnEl.classList.remove('playing'); return; }
+    const u = new SpeechSynthesisUtterance(parts[i]);
+    u.lang = 'en-US'; u.rate = rate; u.pitch = 1;
+    u.onend = () => { i++; if (i < parts.length) setTimeout(next, 1000); else next(); };
+    speechSynthesis.speak(u);
   }
-  speechSynthesis.speak(u);
+  next();
 }
 
 function getCardSpeakText(c) {
-  if (c.type==='word') return c.word + (c.example ? '. ' + c.example : '');
+  if (c.type==='word') return c.word;
   if (c.type==='dialogue') return (c.lines||[]).map(l=>l.text).join('. ');
-  if (c.type==='phrase') return c.phrase + (c.examples?.[0] ? '. ' + c.examples[0] : '');
+  if (c.type==='phrase') return c.phrase;
   return '';
 }
 
@@ -859,6 +917,9 @@ function renderReview() {
     return;
   }
   const c = rq[ri];
+  if (c.type==='word' && !c.phonetic) {
+    backfillPhonetic(c.id, c.word, (ph) => { if (rq[ri]===c) { c.phonetic = ph; renderReview(); } });
+  }
   const tl = {word:'单词',dialogue:'句子',phrase:'句子'}[c.type];
   const speakText = getCardSpeakText(c);
   const ct = c.challengeType || 'audio';
@@ -982,12 +1043,7 @@ function doPlay() {
     audio.onended = () => { if(btn) btn.classList.remove('playing'); window._curAudio = null; };
     audio.play();
   } else {
-    if(btn) btn.classList.add('playing');
-    const u = new SpeechSynthesisUtterance(getCardSpeakText(c));
-    u.lang='en-US'; u.rate=0.85;
-    u.onend = () => { if(btn) btn.classList.remove('playing'); };
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
+    speakWithPause(getCardSpeakText(c), btn, 0.85);
   }
 }
 
@@ -1030,8 +1086,31 @@ function renderLib() {
   let f=cards;
   f=f.filter(c=>matchTF(c));
   if(sf!=='all') f=f.filter(c=>c.scene===sf);
+  if(libQuery.trim()) { const q=libQuery.trim().toLowerCase(); f=f.filter(c=>cardSearchText(c).includes(q)); }
   const g=document.getElementById('lib-grid');
   g.innerHTML = f.length ? f.map(miniCard).join('') : '<div class="empty" style="grid-column:1/-1"><div class="ei">📭</div><h3>没有找到卡片</h3><p>更换筛选或添加新卡片</p></div>';
+  document.getElementById('lib-delete-btn').textContent = `删除(${libSelected.size})`;
+  document.getElementById('lib-delete-btn').style.display = (libSelectMode && libSelected.size) ? '' : 'none';
+}
+
+function toggleLibSelectMode() {
+  libSelectMode = !libSelectMode;
+  libSelected.clear();
+  document.getElementById('lib-select-btn').textContent = libSelectMode ? '完成' : '选择';
+  renderLib();
+}
+function toggleLibSelect(id) {
+  if (libSelected.has(id)) libSelected.delete(id); else libSelected.add(id);
+  renderLib();
+}
+function deleteLibSelected() {
+  if (!libSelected.size) return;
+  if (!confirm(`确定删除选中的 ${libSelected.size} 张卡片？`)) return;
+  db.save(db.all().filter(c=>!libSelected.has(c.id)));
+  libSelected.clear(); libSelectMode=false;
+  document.getElementById('lib-select-btn').textContent = '选择';
+  renderLib(); updateBadge(); updateSceneNav();
+  toast('已删除');
 }
 
 function setTF(t,el){tf=t;document.querySelectorAll('#type-chips .chip').forEach(e=>e.classList.remove('active'));el.classList.add('active');renderLib();}
@@ -1111,9 +1190,40 @@ function save(type){
     Object.assign(base,{phrase:p,explanation:e,usage:v('pu'),examples,scene:document.getElementById('psc').value,challengeType:pct,imageUrl:v('pimg'),scenePrompt:v('pscenep')});
   }
   db.add(base); toast('卡片已保存 ✓'); resetForms(); updateBadge(); updateSceneNav();
+  if (type==='word' && !base.phonetic) {
+    backfillPhonetic(base.id, base.word, () => { if (curPage==='library') renderLib(); });
+  }
 }
 
 function v(id){return (document.getElementById(id)?.value||'').trim();}
+
+// ══════════════════════════════════════════════
+//  音标自动标注
+// ══════════════════════════════════════════════
+async function fetchPhonetic(word) {
+  const lookup = (word||'').split('/')[0].trim().split(' ')[0];
+  if (!lookup) return null;
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lookup)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const entry = data[0];
+    let ph = entry.phonetic;
+    if (!ph && entry.phonetics) { const found = entry.phonetics.find(p=>p.text); ph = found?.text; }
+    return ph || null;
+  } catch(e) { return null; }
+}
+function backfillPhonetic(cardId, word, onDone) {
+  fetchPhonetic(word).then(ph => {
+    if (!ph) return;
+    const cards = db.all();
+    const idx = cards.findIndex(c=>c.id===cardId);
+    if (idx===-1) return;
+    cards[idx].phonetic = ph;
+    db.save(cards);
+    if (onDone) onDone(ph);
+  });
+}
 
 // ══════════════════════════════════════════════
 //  Import Cards
@@ -1172,7 +1282,13 @@ function openModal(id){
     <div><div class="mk">添加日期</div><div class="mv">${(c.created||'').split('T')[0]}</div></div>
   </div>`;
   document.getElementById('modal-body').innerHTML=h;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-dark" onclick="startEdit()">✏️ 编辑</button>
+    <button class="btn btn-ghost" onclick="delCard()" style="color:var(--red)">删除</button>`;
   document.getElementById('overlay').classList.add('open');
+  if (c.type==='word' && !c.phonetic) {
+    backfillPhonetic(c.id, c.word, () => { if (modalId===c.id) openModal(c.id); });
+  }
 }
 
 function closeModal(){document.getElementById('overlay').classList.remove('open');modalId=null;}
@@ -1482,59 +1598,274 @@ function updateSyncLabel() {
     SCENES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
   });
 
+  // 一次性迁移：累计学习天数基线 +2（只执行一次）
+  if (!localStorage.getItem('eng_streak_migrate_v1')) {
+    const sd = JSON.parse(localStorage.getItem(SKEY) || '{"s":0,"d":"","t":0}');
+    sd.t = (sd.t || 0) + 2;
+    localStorage.setItem(SKEY, JSON.stringify(sd));
+    localStorage.setItem('eng_streak_migrate_v1', '1');
+  }
+
   updateBadge();updateSceneNav();updateSyncLabel();renderHome();
 })();
 
 // ══════════════════════════════════════════════
-//  Shadow Reading
+//  Shadow Reading — Video Library
 // ══════════════════════════════════════════════
-const SHADOW_SEGS = [{"start":0.0,"end":5.84,"english":"Hi guys, welcome back to your favorite airports in my bag. I have a work trip coming up","chinese":"大家好，欢迎回到我包里你们最喜欢的机场。我即将出差"},{"start":5.84,"end":9.92,"english":"And this is everything I pack into my carry-all. Let's get into it","chinese":"这就是我随身携带的所有东西。让我们开始吧"},{"start":10.96,"end":17.52,"english":"Starting with my Mimi friends. I think I spent like months trying on glasses before I found these they just work on my face","chinese":"从我的咪咪朋友开始。我想我花了好几个月试戴眼镜才发现它们只适合我的脸"},{"start":18.24,"end":22.8,"english":"It's free less to a shell how to find","chinese":"比外壳更免费，如何找到"},{"start":22.96,"end":27.68,"english":"Little notebook that I grabbed from museum at some point and just never stopped using I","chinese":"我在某个时候从博物馆抓起的小笔记本，并且从未停止使用它"},{"start":28.64,"end":34.0,"english":"Think I'm really into wired earphones lately. They are very vintage and very grounding","chinese":"我最近真的很喜欢有线耳机，它们非常复古而且很接地气"},{"start":35.44,"end":39.76,"english":"My toiletry pouch which has my toothbrush, which is a wooden one","chinese":"我的盥洗袋里有牙刷，是木制的"},{"start":40.8,"end":48.72,"english":"and melancholy deodorant stick, is tiny and smells amazing","chinese":"还有除臭棒，很小，闻起来很棒"},{"start":48.8,"end":50.8,"english":"and my liquid bandage","chinese":"还有我的液体绷带"},{"start":51.76,"end":58.44,"english":"Pink fun case very intentional it has a suction pad on the back, which is honestly so useful at the airport","chinese":"粉色手机壳非常用心，背面有吸盘，在机场真的超好用"},{"start":58.44,"end":63.76,"english":"I just stick my boarding pass or ID card or power bank to it and just go","chinese":"我只需把登机牌、身份证或充电宝贴上去就可以走了"},{"start":64.96,"end":68.0,"english":"Mary make her toad also very intentionally pink","chinese":"玛丽特意把她的蟾蜍也变成了粉红色"},{"start":68.8,"end":76.24,"english":"I always throw a photo bow back in my carry-all when I fly, you know, just in case you always end up needing more space than you ever know","chinese":"飞行时我总会在手提包里放一个折叠袋，以防万一需要更多空间"},{"start":76.56,"end":81.04,"english":"a Funko sheet mask","chinese":"一款 Funko 面膜"},{"start":81.12,"end":83.44,"english":"Long-flight hydration very important","chinese":"长途飞行补水非常重要"},{"start":84.64,"end":86.64,"english":"spare camera battery","chinese":"备用相机电池"},{"start":86.64,"end":92.96,"english":"I'm always filming so I need it and it also works as a power bank and my small bottle of water","chinese":"我一直在拍摄所以需要它，它还可以当充电宝用，还有我的小瓶水"},{"start":95.04,"end":97.52,"english":"Your MacBook is a work trip overall","chinese":"MacBook 是出差必备"},{"start":98.32,"end":102.96,"english":"A hard-earnable in my friend pick it out for me in turkey and my Milo","chinese":"这是朋友从土耳其帮我挑的，还有我的 Milo"},{"start":103.92,"end":106.4,"english":"That's everything. I'll see you guys in the next one","chinese":"这就是全部了，下期见"}];
+const SHADOW_VIDEOS = [
+  {
+    id: 'airport-vlog',
+    name: '机场翻包 Vlog',
+    video: '视频/全英文vlog-机场翻包.mp4',
+    segments: [{"start":0.0,"end":5.84,"english":"Hi guys, welcome back to your favorite airports in my bag. I have a work trip coming up","chinese":"大家好，欢迎回到我包里你们最喜欢的机场。我即将出差"},{"start":5.84,"end":9.92,"english":"And this is everything I pack into my carry-all. Let's get into it","chinese":"这就是我随身携带的所有东西。让我们开始吧"},{"start":10.96,"end":17.52,"english":"Starting with my Mimi friends. I think I spent like months trying on glasses before I found these they just work on my face","chinese":"从我的咪咪朋友开始。我想我花了好几个月试戴眼镜才发现它们只适合我的脸"},{"start":18.24,"end":22.8,"english":"It's free less to a shell how to find","chinese":"比外壳更免费，如何找到"},{"start":22.96,"end":27.68,"english":"Little notebook that I grabbed from museum at some point and just never stopped using I","chinese":"我在某个时候从博物馆抓起的小笔记本，并且从未停止使用它"},{"start":28.64,"end":34.0,"english":"Think I'm really into wired earphones lately. They are very vintage and very grounding","chinese":"我最近真的很喜欢有线耳机，它们非常复古而且很接地气"},{"start":35.44,"end":39.76,"english":"My toiletry pouch which has my toothbrush, which is a wooden one","chinese":"我的盥洗袋里有牙刷，是木制的"},{"start":40.8,"end":48.72,"english":"and melancholy deodorant stick, is tiny and smells amazing","chinese":"还有除臭棒，很小，闻起来很棒"},{"start":48.8,"end":50.8,"english":"and my liquid bandage","chinese":"还有我的液体绷带"},{"start":51.76,"end":58.44,"english":"Pink fun case very intentional it has a suction pad on the back, which is honestly so useful at the airport","chinese":"粉色手机壳非常用心，背面有吸盘，在机场真的超好用"},{"start":58.44,"end":63.76,"english":"I just stick my boarding pass or ID card or power bank to it and just go","chinese":"我只需把登机牌、身份证或充电宝贴上去就可以走了"},{"start":64.96,"end":68.0,"english":"Mary make her toad also very intentionally pink","chinese":"玛丽特意把她的蟾蜍也变成了粉红色"},{"start":68.8,"end":76.24,"english":"I always throw a photo bow back in my carry-all when I fly, you know, just in case you always end up needing more space than you ever know","chinese":"飞行时我总会在手提包里放一个折叠袋，以防万一需要更多空间"},{"start":76.56,"end":81.04,"english":"a Funko sheet mask","chinese":"一款 Funko 面膜"},{"start":81.12,"end":83.44,"english":"Long-flight hydration very important","chinese":"长途飞行补水非常重要"},{"start":84.64,"end":86.64,"english":"spare camera battery","chinese":"备用相机电池"},{"start":86.64,"end":92.96,"english":"I'm always filming so I need it and it also works as a power bank and my small bottle of water","chinese":"我一直在拍摄所以需要它，它还可以当充电宝用，还有我的小瓶水"},{"start":95.04,"end":97.52,"english":"Your MacBook is a work trip overall","chinese":"MacBook 是出差必备"},{"start":98.32,"end":102.96,"english":"A hard-earnable in my friend pick it out for me in turkey and my Milo","chinese":"这是朋友从土耳其帮我挑的，还有我的 Milo"},{"start":103.92,"end":106.4,"english":"That's everything. I'll see you guys in the next one","chinese":"这就是全部了，下期见"}]
+  }
+];
 
+let _curShadowVideo = null;
+let _curShadowStage = 1;
 let _shadowIdx = 0;
 let _shadowSubVisible = false;
 let _shadowEndTimer = null;
-
-function shadowPlay() {
-  const seg = SHADOW_SEGS[_shadowIdx];
-  const vid = document.getElementById('shadow-video');
-  clearTimeout(_shadowEndTimer);
-  vid.currentTime = seg.start;
-  vid.play();
-  const ms = (seg.end - seg.start) * 1000 + 400;
-  _shadowEndTimer = setTimeout(() => vid.pause(), ms);
-  shadowRenderUI();
-}
-
-function shadowRepeat() { shadowPlay(); }
-
-function shadowNext() {
-  if (_shadowIdx < SHADOW_SEGS.length - 1) { _shadowIdx++; shadowPlay(); }
-  else { document.getElementById('shadow-en').textContent = '已完成全部句子！'; document.getElementById('shadow-zh').textContent = ''; }
-}
-
-function shadowToggleSub() {
-  _shadowSubVisible = !_shadowSubVisible;
-  document.getElementById('shadow-mask').classList.toggle('visible', _shadowSubVisible);
-  document.getElementById('shadow-sub-btn').textContent = _shadowSubVisible ? '字幕 🙈' : '字幕 👁';
-  const seg = SHADOW_SEGS[_shadowIdx] || {};
-  document.getElementById('shadow-zh').textContent = _shadowSubVisible ? (seg.chinese || '') : '';
-}
-
-function shadowRenderUI() {
-  const seg = SHADOW_SEGS[_shadowIdx] || {};
-  document.getElementById('shadow-en').textContent = seg.english || '';
-  document.getElementById('shadow-zh').textContent = _shadowSubVisible ? (seg.chinese || '') : '';
-  document.getElementById('shadow-progress').textContent = `${_shadowIdx + 1} / ${SHADOW_SEGS.length}`;
-}
+let shadowQuery = '', shadowSelectMode = false, shadowSelected = new Set();
+const SHADOW_DELETED_KEY = 'eng_shadow_deleted_v1';
+function shadowGetDeletedIds() { return new Set(JSON.parse(localStorage.getItem(SHADOW_DELETED_KEY) || '[]')); }
+function shadowVisibleVideos() { const deleted = shadowGetDeletedIds(); return SHADOW_VIDEOS.filter(v => !deleted.has(v.id)); }
 
 function initShadow() {
+  document.getElementById('shadow-list-view').style.display = '';
+  document.getElementById('shadow-detail-view').style.display = 'none';
+  shadowRenderList();
+}
+
+const SHADOW_NAME_KEY = 'eng_shadow_names_v1';
+function shadowGetName(v) {
+  const names = JSON.parse(localStorage.getItem(SHADOW_NAME_KEY) || '{}');
+  return names[v.id] || v.name;
+}
+function shadowSetName(v, name) {
+  v.name = name;
+  const names = JSON.parse(localStorage.getItem(SHADOW_NAME_KEY) || '{}');
+  names[v.id] = name;
+  localStorage.setItem(SHADOW_NAME_KEY, JSON.stringify(names));
+}
+
+function shadowRenderList() {
+  const grid = document.getElementById('shadow-video-grid');
+  let videos = shadowVisibleVideos();
+  if (shadowQuery.trim()) {
+    const q = shadowQuery.trim().toLowerCase();
+    videos = videos.filter(v => {
+      const name = shadowGetName(v).toLowerCase();
+      const text = v.segments.map(s=>(s.english||'')+' '+(s.chinese||'')).join(' ').toLowerCase();
+      return name.includes(q) || text.includes(q);
+    });
+  }
+  if (!videos.length) {
+    grid.innerHTML = '<div class="empty" style="padding:24px"><p>没有匹配的视频</p></div>';
+  } else {
+    grid.innerHTML = videos.map(v => {
+      const checked = shadowSelected.has(v.id);
+      const checkbox = shadowSelectMode ? `<div class="lib-check ${checked?'checked':''}">${checked?'✓':''}</div>` : '';
+      const clickFn = shadowSelectMode ? `shadowToggleSelect('${v.id}')` : `shadowOpenVideo('${v.id}')`;
+      return `
+      <div class="card shadow-video-card" style="position:relative" onclick="${clickFn}">
+        ${checkbox}
+        <video class="shadow-thumb" src="${esc(v.video)}" muted preload="metadata" playsinline onloadedmetadata="this.currentTime=Math.min(1,this.duration/4)"></video>
+        <div class="ct" style="margin-top:10px">${esc(shadowGetName(v))}</div>
+        <div class="cs">${v.segments.length} 句</div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('shadow-delete-btn').textContent = `删除(${shadowSelected.size})`;
+  document.getElementById('shadow-delete-btn').style.display = (shadowSelectMode && shadowSelected.size) ? '' : 'none';
+}
+
+function shadowToggleSelectMode() {
+  shadowSelectMode = !shadowSelectMode;
+  shadowSelected.clear();
+  document.getElementById('shadow-select-btn').textContent = shadowSelectMode ? '完成' : '选择';
+  shadowRenderList();
+}
+function shadowToggleSelect(id) {
+  if (shadowSelected.has(id)) shadowSelected.delete(id); else shadowSelected.add(id);
+  shadowRenderList();
+}
+function shadowDeleteSelected() {
+  if (!shadowSelected.size) return;
+  if (!confirm(`确定从列表删除选中的 ${shadowSelected.size} 个视频？（不会删除已上传到 GitHub 的视频文件）`)) return;
+  const deleted = shadowGetDeletedIds();
+  shadowSelected.forEach(id => deleted.add(id));
+  localStorage.setItem(SHADOW_DELETED_KEY, JSON.stringify([...deleted]));
+  shadowSelected.clear();
+  shadowSelectMode = false;
+  document.getElementById('shadow-select-btn').textContent = '选择';
+  shadowRenderList();
+  toast('已删除');
+}
+
+function shadowOpenVideo(id) {
+  _curShadowVideo = SHADOW_VIDEOS.find(v => v.id === id);
+  if (!_curShadowVideo) return;
+  _curShadowVideo.name = shadowGetName(_curShadowVideo);
+  document.getElementById('shadow-list-view').style.display = 'none';
+  document.getElementById('shadow-detail-view').style.display = '';
+  document.getElementById('shadow-video-title').textContent = _curShadowVideo.name;
+  document.getElementById('shadow-video').src = _curShadowVideo.video;
+  shadowApplyOverrides(_curShadowVideo);
+  shadowSwitchStage(1);
+}
+
+function shadowEditTitle() {
+  const h1 = document.getElementById('shadow-video-title');
+  const current = _curShadowVideo.name;
+  h1.outerHTML = `<input id="shadow-video-title" class="fi" style="font-size:18px;font-weight:800;max-width:280px" value="${esc(current)}" onkeydown="if(event.key==='Enter')this.blur()" onblur="shadowSaveTitle(this.value)">`;
+  document.getElementById('shadow-video-title').focus();
+}
+function shadowSaveTitle(name) {
+  name = name.trim();
+  if (name) shadowSetName(_curShadowVideo, name);
+  const h1 = document.createElement('h1');
+  h1.id = 'shadow-video-title';
+  h1.style = 'margin:0;font-size:20px;cursor:pointer';
+  h1.title = '点击编辑名称';
+  h1.onclick = shadowEditTitle;
+  h1.textContent = _curShadowVideo.name;
+  document.getElementById('shadow-video-title').replaceWith(h1);
+}
+
+// ── 编辑持久化 ──
+const SHADOW_EDIT_KEY = 'eng_shadow_edits_v1';
+function shadowApplyOverrides(video) {
+  const all = JSON.parse(localStorage.getItem(SHADOW_EDIT_KEY) || '{}');
+  const overrides = all[video.id];
+  if (!overrides) return;
+  video.segments.forEach((seg, i) => {
+    if (overrides[i]) {
+      if (overrides[i].english !== undefined) seg.english = overrides[i].english;
+      if (overrides[i].chinese !== undefined) seg.chinese = overrides[i].chinese;
+    }
+  });
+}
+function shadowSaveEdit(idx, field, value) {
+  _curShadowVideo.segments[idx][field] = value;
+  const all = JSON.parse(localStorage.getItem(SHADOW_EDIT_KEY) || '{}');
+  if (!all[_curShadowVideo.id]) all[_curShadowVideo.id] = {};
+  if (!all[_curShadowVideo.id][idx]) all[_curShadowVideo.id][idx] = {};
+  all[_curShadowVideo.id][idx][field] = value;
+  localStorage.setItem(SHADOW_EDIT_KEY, JSON.stringify(all));
+}
+
+function shadowBackToList() {
+  clearTimeout(_shadowEndTimer);
+  const vid = document.getElementById('shadow-video');
+  vid.pause(); vid.onended = null;
+  initShadow();
+}
+
+function shadowSwitchStage(stage) {
+  _curShadowStage = stage;
   _shadowIdx = 0;
   _shadowSubVisible = false;
+  clearTimeout(_shadowEndTimer);
+  const vid = document.getElementById('shadow-video');
+  vid.pause(); vid.onended = null;
+  vid.controls = (stage === 1);
+  vid.playbackRate = 1;
   document.getElementById('shadow-mask').classList.remove('visible');
-  document.getElementById('shadow-sub-btn').textContent = '字幕 👁';
-  document.getElementById('shadow-en').textContent = '点击「重复这段」播放第一句';
-  document.getElementById('shadow-zh').textContent = '';
-  document.getElementById('shadow-progress').textContent = `1 / ${SHADOW_SEGS.length}`;
+  document.querySelectorAll('.shadow-tab').forEach(t => t.classList.toggle('active', +t.dataset.stage === stage));
+  document.getElementById('shadow-sub-box').style.display = '';
+  document.getElementById('shadow-wrap-12').style.display = (stage === 3) ? 'none' : '';
+  document.getElementById('shadow-preview-wrap').style.display = (stage === 3) ? '' : 'none';
+  if (stage === 1) shadowRenderStage1();
+  if (stage === 2) shadowRenderStage2(false);
+  if (stage === 3) shadowRenderStage3Preview();
+}
+
+// ── Stage 3: 全文预览（可编辑） ──
+function shadowRenderStage3Preview() {
+  const segs = _curShadowVideo.segments;
+  document.getElementById('shadow-preview-list').innerHTML = segs.map((seg, i) => `
+    <div class="preview-row">
+      <div class="preview-n">${i+1}</div>
+      <textarea class="preview-en" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';shadowSaveEdit(${i},'english',this.value)">${esc(seg.english||'')}</textarea>
+      <textarea class="preview-zh" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';shadowSaveEdit(${i},'chinese',this.value)">${esc(seg.chinese||'')}</textarea>
+    </div>
+  `).join('');
+  document.querySelectorAll('#shadow-preview-list textarea').forEach(t => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; });
+}
+
+// ── Stage 1: 盲听全文 ──
+function shadowRenderStage1() {
+  document.getElementById('shadow-sub-box').style.display = 'none';
+  document.getElementById('shadow-controls').innerHTML = `
+    <button class="btn btn-dark" id="s1-btn" onclick="shadowS1Toggle()">▶ 播放全文</button>
+    <div class="shadow-speed" id="shadow-speed">
+      ${[0.75,1].map(r=>`<button class="speed-btn${r===1?' active':''}" data-rate="${r}" onclick="shadowSetRate(${r})">${r}x</button>`).join('')}
+    </div>
+  `;
+}
+function shadowSetRate(rate) {
+  document.getElementById('shadow-video').playbackRate = rate;
+  document.querySelectorAll('#shadow-speed .speed-btn').forEach(b => b.classList.toggle('active', +b.dataset.rate === rate));
+}
+function shadowS1Toggle() {
+  const vid = document.getElementById('shadow-video');
+  const btn = document.getElementById('s1-btn');
+  if (vid.paused) {
+    if (vid.ended) vid.currentTime = 0;
+    vid.play();
+    btn.textContent = '⏸ 暂停';
+    vid.onended = () => { btn.textContent = '▶ 重新播放'; };
+  } else {
+    vid.pause();
+    btn.textContent = '▶ 继续播放';
+  }
+}
+
+// ── Stage 2: 逐句口译（中翻英） ──
+function shadowRenderStage2(revealed) {
+  const segs = _curShadowVideo.segments;
+  const seg = segs[_shadowIdx];
+  if (!seg) {
+    document.getElementById('shadow-sub-box').innerHTML = '<div class="shadow-en">🎉 本视频口译练习已完成！</div>';
+    document.getElementById('shadow-controls').innerHTML = `<button class="btn btn-ghost" onclick="shadowSwitchStage(2)">↺ 从头再来</button>`;
+    return;
+  }
+  document.getElementById('shadow-sub-box').innerHTML = `
+    <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">看中文，尝试口译成英文（${_shadowIdx+1}/${segs.length}）</div>
+    <div class="shadow-zh" style="font-size:18px;font-weight:600;color:var(--text)">${esc(seg.chinese || '(无中文翻译)')}</div>
+    ${revealed ? `<div class="shadow-en" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${esc(seg.english)}</div>` : ''}
+  `;
+  document.getElementById('shadow-controls').innerHTML = revealed ? `
+    <button class="btn btn-ghost" onclick="shadowS2PlayAudio()">🔊 听原音</button>
+    <button class="btn btn-ghost" onclick="shadowS2Prev()" ${_shadowIdx===0?'disabled':''}>← 上一句</button>
+    <button class="btn btn-dark" onclick="shadowS2Next()">下一句 →</button>
+  ` : `
+    <button class="btn btn-dark" onclick="shadowRenderStage2(true)">对照原文</button>
+    <button class="btn btn-ghost" onclick="shadowS2Prev()" ${_shadowIdx===0?'disabled':''}>← 上一句</button>
+    <button class="btn btn-ghost" onclick="shadowS2Next()">下一句 →</button>
+  `;
+  if (revealed) shadowS2PlayAudio();
+}
+function shadowS2Prev() {
+  if (_shadowIdx === 0) return;
+  _shadowIdx--;
+  document.getElementById('shadow-mask').classList.remove('visible');
+  shadowRenderStage2(false);
+}
+function shadowS2PlayAudio() {
+  const seg = _curShadowVideo.segments[_shadowIdx];
+  const vid = document.getElementById('shadow-video');
+  clearTimeout(_shadowEndTimer);
+  document.getElementById('shadow-mask').classList.add('visible');
+  vid.currentTime = seg.start;
+  vid.play();
+  _shadowEndTimer = setTimeout(() => vid.pause(), (seg.end - seg.start) * 1000 + 400);
+}
+function shadowS2Next() {
+  _shadowIdx++;
+  document.getElementById('shadow-mask').classList.remove('visible');
+  shadowRenderStage2(false);
 }
 </script>
 </body>
