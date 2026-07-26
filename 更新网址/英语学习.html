@@ -392,6 +392,13 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
     <div class="stat"><div class="n" id="s-total">0</div><div class="l">卡片总数</div></div>
     <div class="stat"><div class="n" id="s-streak">0</div><div class="l">累计学习天数</div></div>
   </div>
+  <div id="review-plan-action" style="display:none;margin:0 0 18px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:var(--glass);align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div><div style="font-size:14px;font-weight:700">调整复习计划</div><div id="review-plan-summary" style="margin-top:3px;font-size:12px;color:var(--muted)"></div></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <label style="font-size:13px;color:var(--muted)">均分到未来 <input class="fi" id="review-plan-days" type="number" min="1" max="365" value="7" inputmode="numeric" style="width:58px;padding:7px 8px;text-align:center"> 天</label>
+      <button class="btn btn-dark" onclick="scheduleDueCardsFromInput()">确认</button>
+    </div>
+  </div>
   <div class="chart-card">
     <div class="chart-hd"><div class="chart-title">复习日历预测</div><div class="chart-sub">每天待复习卡片数，展示到下月底</div></div>
     <div id="chart-forecast"></div>
@@ -607,6 +614,7 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 // ══════════════════════════════════════════════
 const KEY = 'eng_cards_v1';
 const SKEY = 'eng_streak_v1';
+const REVIEW_HISTORY_KEY = 'eng_review_history_v1';
 const SCENES = ['居家','机场','酒店','餐厅','饮品店','购物','交通','观光','医疗','社交','通用'];
 
 const db = {
@@ -615,6 +623,31 @@ const db = {
   add: card => { const c = db.all(); c.push(card); db.save(c); },
   del: id => db.save(db.all().filter(c=>c.id!==id)),
 };
+
+// 每日复习完成量是不可变历史记录，不能从会被覆盖的 lastReview 字段反推。
+function getReviewHistory() {
+  try { return JSON.parse(localStorage.getItem(REVIEW_HISTORY_KEY) || '{}'); }
+  catch (_) { return {}; }
+}
+function saveReviewHistory(history) { localStorage.setItem(REVIEW_HISTORY_KEY, JSON.stringify(history)); }
+function recordReview(date = tod()) {
+  const history = getReviewHistory();
+  history[date] = (Number(history[date]) || 0) + 1;
+  saveReviewHistory(history);
+}
+// 首次升级时保留当前可获取的历史快照；之后所有新复习都追加到独立记录中。
+function migrateReviewHistory(cards = db.all()) {
+  if (localStorage.getItem(REVIEW_HISTORY_KEY)) return;
+  const history = {};
+  cards.forEach(card => {
+    if (card.lastReview) history[card.lastReview] = (history[card.lastReview] || 0) + 1;
+  });
+  saveReviewHistory(history);
+}
+function restoreReviewHistory(record) {
+  if (record && typeof record.reviewHistory === 'object') saveReviewHistory(record.reviewHistory);
+  else { localStorage.removeItem(REVIEW_HISTORY_KEY); migrateReviewHistory(); }
+}
 
 // ══════════════════════════════════════════════
 //  SM-2
@@ -670,8 +703,54 @@ function renderHome() {
   document.getElementById('s-due').textContent = due.length;
   document.getElementById('s-total').textContent = cards.length;
   document.getElementById('s-streak').textContent = getStreak();
+  const planAction = document.getElementById('review-plan-action');
+  const planSummary = document.getElementById('review-plan-summary');
+  if (due.length) {
+    planSummary.textContent = `当前有 ${due.length} 张到期或逾期卡片；从今天起（含今天）重新均分。`;
+    planAction.style.display = 'flex';
+  } else {
+    planAction.style.display = 'none';
+  }
   renderForecastChart(cards);
   renderMemoryChart(cards);
+}
+
+function scheduleDueCardsFromInput() {
+  const input = document.getElementById('review-plan-days');
+  const days = Number(input.value);
+  if (!Number.isInteger(days) || days < 1 || days > 365) {
+    toast('请输入 1 到 365 之间的整数天数');
+    input.focus();
+    return;
+  }
+  scheduleDueCards(days);
+}
+
+// 将当前到期（含逾期）卡片从今天起均分到指定天数；不改变 SM-2 学习参数。
+function scheduleDueCards(days) {
+  const cards = db.all();
+  const dueCards = cards.filter(isDue);
+  if (!dueCards.length) { toast('暂无待复习卡片'); return; }
+  const base = Math.floor(dueCards.length / days), extra = dueCards.length % days;
+  const plan = Array.from({length:days}, (_, i) => base + (i < extra ? 1 : 0));
+  const startDate = tod();
+  const end = new Date(`${startDate}T12:00:00`);
+  end.setDate(end.getDate() + days - 1);
+  const endDate = end.toISOString().split('T')[0];
+  if (!confirm(`将 ${dueCards.length} 张到期或逾期卡片均分到 ${startDate} 至 ${endDate}？\n每天分别为：${plan.join('、')} 张。`)) return;
+
+  const start = new Date(`${startDate}T12:00:00`);
+  let cursor = 0;
+  plan.forEach((count, dayOffset) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + dayOffset);
+    const dateText = date.toISOString().split('T')[0];
+    for (let i = 0; i < count; i++) dueCards[cursor++].nextReview = dateText;
+  });
+  db.save(cards);
+  toast(`已将 ${dueCards.length} 张卡片均分到未来 ${days} 天`);
+  updateBadge();
+  renderHome();
 }
 
 // ── Chart helpers ──
@@ -712,9 +791,8 @@ function renderForecastChart(cards) {
   const todayStr = tod();
   const fmt = (y,m,day) => `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 
-  // 历史实际复习数量（按 lastReview 统计，包含今天已完成的）
-  const reviewedCounts = {};
-  cards.forEach(c => { if (c.lastReview) reviewedCounts[c.lastReview] = (reviewedCounts[c.lastReview]||0) + 1; });
+  // 历史实际复习数量来自独立日志，避免后续复习覆盖 lastReview 后改写历史。
+  const reviewedCounts = getReviewHistory();
 
   // 未来到期数量（按 nextReview 精确匹配）
   const dueCounts = {};
@@ -1072,7 +1150,7 @@ function flip() {
 
 function rate(q) {
   const cards=db.all(), idx=cards.findIndex(c=>c.id===rq[ri].id);
-  if(idx!==-1){ Object.assign(cards[idx], sm2(cards[idx],q)); db.save(cards); }
+  if(idx!==-1){ Object.assign(cards[idx], sm2(cards[idx],q)); db.save(cards); recordReview(); }
   ri++; flipped=false; renderReview(); updateBadge();
 }
 
@@ -1515,7 +1593,7 @@ async function initSync() {
     const r = await fetch('https://api.jsonbin.io/v3/b', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'english-learning'},
-      body: JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),lastSync:new Date().toISOString()})
+      body: JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),reviewHistory:getReviewHistory(),lastSync:new Date().toISOString()})
     });
     if(!r.ok){const e=await r.json();throw new Error(e.message||'Key 无效，请检查后重试');}
     const data = await r.json();
@@ -1537,6 +1615,7 @@ async function joinSync() {
     const data = await r.json();
     db.save(data.record.cards||[]);
     if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
+    restoreReviewHistory(data.record);
     saveSyncCfg({apiKey:key, binId, lastSync:new Date().toISOString()});
     updateSyncLabel(); updateBadge(); updateSceneNav();
     closeSyncModal(); toast('☁️ 关联成功，数据已下载！');
@@ -1551,7 +1630,7 @@ async function doUpload() {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{
       method:'PUT',
       headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},
-      body:JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),lastSync:new Date().toISOString()})
+      body:JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),reviewHistory:getReviewHistory(),lastSync:new Date().toISOString()})
     });
     if(!r.ok) throw new Error('上传失败，请检查网络');
     cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
@@ -1568,6 +1647,7 @@ async function doDownload() {
     const data = await r.json();
     db.save(data.record.cards||[]);
     if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
+    restoreReviewHistory(data.record);
     cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
     updateBadge(); updateSceneNav();
     if(curPage==='home')renderHome();
@@ -1593,6 +1673,7 @@ function updateSyncLabel() {
 //  Init: populate selects + seed sample cards
 // ══════════════════════════════════════════════
 (function init(){
+  migrateReviewHistory();
   ['wsc','dsc','psc'].forEach(id=>{
     const sel=document.getElementById(id);
     SCENES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
