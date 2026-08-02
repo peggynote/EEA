@@ -330,28 +330,6 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 }
 
 /* ── Shadow Reading ── */
-.shadow-wrap{display:flex;flex-direction:column;gap:20px;max-width:680px}
-.shadow-drop{border:2px dashed rgba(88,86,214,.3);border-radius:var(--r);padding:28px;text-align:center;background:rgba(255,255,255,.4);cursor:pointer;transition:all .18s}
-.shadow-drop:hover{border-color:var(--accent);background:rgba(88,86,214,.06)}
-.shadow-drop.loaded{border-style:solid;border-color:var(--green)}
-.shadow-player{position:relative;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9}
-.shadow-player video{width:100%;height:100%;display:block}
-.shadow-mask{position:absolute;left:0;right:0;bottom:0;height:16%;background:#000;transition:opacity .2s}
-.shadow-mask.visible{opacity:0}
-.shadow-sub-box{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;min-height:80px}
-.shadow-en{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:6px}
-.shadow-zh{font-size:14px;color:var(--muted);font-weight:500}
-.shadow-controls{display:flex;gap:10px;align-items:center}
-.shadow-progress{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto}
-.shadow-files{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.shadow-tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--border)}
-.shadow-tab{padding:10px 16px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
-.shadow-tab:hover{color:var(--text)}
-.shadow-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.shadow-video-card{cursor:pointer;transition:transform .15s}
-.shadow-video-card:hover{transform:translateY(-2px)}
-.shadow-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:#000;display:block;pointer-events:none}
-.shadow-speed{display:flex;gap:4px;background:rgba(255,255,255,.5);border-radius:10px;padding:3px}
 .speed-btn{padding:6px 10px;border:none;background:none;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
 .speed-btn.active{background:var(--accent);color:#fff}
 .preview-row{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px}
@@ -373,7 +351,6 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
   <div class="sb-item active" data-page="home" onclick="nav('home')"><span class="ico">🏠</span>主页</div>
   <div class="sb-item" data-page="review" onclick="nav('review')"><span class="ico">🔄</span>今日复习<span class="badge" id="badge">0</span></div>
   <div class="sb-item" data-page="library" onclick="nav('library')"><span class="ico">📚</span>卡片库</div>
-  <div class="sb-item" data-page="shadow" onclick="nav('shadow')"><span class="ico">🎬</span>视频库</div>
   <div class="sb-label" style="margin-top:12px">按场景</div>
   <div id="scene-nav"></div>
   <div class="sb-label" style="margin-top:12px">云同步</div>
@@ -518,7 +495,7 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
 </div>
 
 <!-- SHADOW READING -->
-<div class="page" id="page-shadow">
+<div class="page" id="page-shadow" style="display:none" aria-hidden="true">
 
   <!-- Video list -->
   <div id="shadow-list-view">
@@ -574,9 +551,6 @@ h2{font-size:15px;font-weight:700;margin-bottom:14px}
   </button>
   <button class="bn-item" data-page="library" onclick="nav('library')">
     <span class="bn-ico">📚</span><span class="bn-label">卡片库</span>
-  </button>
-  <button class="bn-item" data-page="shadow" onclick="nav('shadow')">
-    <span class="bn-ico">🎬</span><span class="bn-label">视频库</span>
   </button>
   <button class="bn-item" onclick="openSyncModal()">
     <span class="bn-ico">☁️</span><span class="bn-label" id="bn-sync">同步</span>
@@ -690,7 +664,6 @@ function nav(page) {
   if (page==='review') startReview();
   if (page==='library') renderLib();
   if (page==='add') resetForms();
-  if (page==='shadow') initShadow();
   updateBadge();
 }
 
@@ -1521,6 +1494,9 @@ function toast(msg){
 //  Cloud Sync (JSONBin.io)
 // ══════════════════════════════════════════════
 const SYNC_KEY = 'eng_sync_v1';
+const SYNC_DIRECT_LIMIT = 90 * 1024;
+const SYNC_CHUNK_TYPE = 'eng_cards_chunk_v2';
+const SYNC_MANIFEST_TYPE = 'eng_cards_manifest_v2';
 function getSyncCfg() { return JSON.parse(localStorage.getItem(SYNC_KEY)||'null'); }
 function saveSyncCfg(c) { localStorage.setItem(SYNC_KEY, JSON.stringify(c)); }
 function buildSyncRecord() {
@@ -1537,6 +1513,76 @@ async function apiErrorMessage(response, action) {
     try { detail = (await response.text()).trim().slice(0, 180); } catch (_) {}
   }
   return `${action}（HTTP ${response.status}）${detail ? `：${detail}` : ''}`;
+}
+function recordBytes(record) { return new Blob([JSON.stringify(record)]).size; }
+function splitCardsForSync(cards) {
+  const groups = [], current = [];
+  for (const card of cards) {
+    const candidate = [...current, card];
+    if (recordBytes({type:SYNC_CHUNK_TYPE,cards:candidate}) <= SYNC_DIRECT_LIMIT) {
+      current.push(card);
+    } else {
+      if (!current.length) {
+        const label = card.word || card.phrase || card.title || card.id;
+        throw new Error(`卡片“${label}”单独就超过 90 KB，无法拆分同步；请移除或缩短该卡片的录音。`);
+      }
+      groups.push([...current]);
+      current.length = 0;
+      if (recordBytes({type:SYNC_CHUNK_TYPE,cards:[card]}) > SYNC_DIRECT_LIMIT) {
+        const label = card.word || card.phrase || card.title || card.id;
+        throw new Error(`卡片“${label}”单独就超过 90 KB，无法拆分同步；请移除或缩短该卡片的录音。`);
+      }
+      current.push(card);
+    }
+  }
+  if (current.length) groups.push(current);
+  return groups;
+}
+async function createSyncBin(apiKey, record, name) {
+  const r = await fetch('https://api.jsonbin.io/v3/b', {
+    method:'POST', headers:{'Content-Type':'application/json','X-Master-Key':apiKey,'X-Bin-Name':name}, body:JSON.stringify(record)
+  });
+  if(!r.ok) throw new Error(await apiErrorMessage(r, '创建同步分片失败'));
+  const data = await r.json();
+  return data.metadata.id;
+}
+async function updateSyncBin(apiKey, binId, record) {
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+    method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':apiKey}, body:JSON.stringify(record)
+  });
+  if(!r.ok) throw new Error(await apiErrorMessage(r, '更新同步索引失败'));
+}
+async function readSyncBin(apiKey, binId, action='下载失败') {
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{'X-Master-Key':apiKey}});
+  if(!r.ok) throw new Error(await apiErrorMessage(r, action));
+  return (await r.json()).record;
+}
+async function uploadChunkedRecord(cfg, record) {
+  const groups = splitCardsForSync(record.cards);
+  const chunkIds = [];
+  for (let i=0; i<groups.length; i++) {
+    chunkIds.push(await createSyncBin(cfg.apiKey, {type:SYNC_CHUNK_TYPE,index:i,cards:groups[i]}, `english-cards-${i+1}`));
+  }
+  const manifest = {type:SYNC_MANIFEST_TYPE,version:2,chunkIds,streak:record.streak,reviewHistory:record.reviewHistory,lastSync:record.lastSync};
+  if (cfg.syncMode === 'chunked') await updateSyncBin(cfg.apiKey, cfg.binId, manifest);
+  else { cfg.binId = await createSyncBin(cfg.apiKey, manifest, 'english-learning-index'); cfg.syncMode = 'chunked'; }
+  cfg.lastSync = new Date().toISOString();
+}
+async function loadSyncRecord(apiKey, binId) {
+  const record = await readSyncBin(apiKey, binId);
+  if (record.type !== SYNC_MANIFEST_TYPE) return {record, chunked:false};
+  const cards = [];
+  for (const id of record.chunkIds || []) {
+    const chunk = await readSyncBin(apiKey, id, '下载同步分片失败');
+    if (chunk.type !== SYNC_CHUNK_TYPE || !Array.isArray(chunk.cards)) throw new Error('同步分片格式无效，请重新上传数据。');
+    cards.push(...chunk.cards);
+  }
+  return {record:{cards,streak:record.streak,reviewHistory:record.reviewHistory,lastSync:record.lastSync},chunked:true};
+}
+function applySyncRecord(record) {
+  db.save(record.cards||[]);
+  if(record.streak) localStorage.setItem(SKEY, JSON.stringify(record.streak));
+  restoreReviewHistory(record);
 }
 // 清除复制时混入的不可见Unicode字符，只保留ASCII可见字符
 function cleanKey(s) { return s.replace(/[^\x20-\x7E]/g,'').trim(); }
@@ -1563,12 +1609,12 @@ function openSyncModal() {
   } else {
     const lastSync = cfg.lastSync ? new Date(cfg.lastSync).toLocaleString('zh-CN') : '从未同步';
     const bytes = syncRecordBytes();
-    const sizeWarning = bytes > 100 * 1024;
+    const willSplit = bytes > SYNC_DIRECT_LIMIT || cfg.syncMode === 'chunked';
     el.innerHTML = `
       <div style="background:var(--sb);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;line-height:1.8">
         <div><b>同步码</b>：<span style="font-family:monospace;color:var(--accent)">${cfg.binId}</span></div>
         <div style="color:var(--muted)">上次同步：${lastSync}</div>
-        <div style="color:${sizeWarning?'var(--red)':'var(--muted)'}">本次待上传数据：${formatBytes(bytes)}${sizeWarning?'（超过 JSONBin 免费版约 100 KB 上限）':''}</div>
+        <div style="color:${willSplit?'var(--accent)':'var(--muted)'}">本次待上传数据：${formatBytes(bytes)}${willSplit?'（将自动拆分为多个记录）':''}</div>
       </div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
         在另一台设备打开网页后，点「☁️ 同步设置」→「已有同步码」，输入上方同步码即可关联。
@@ -1608,14 +1654,11 @@ async function initSync() {
   if(!key){showSyncErr('请填写 Secret Key');return;}
   const btn = event.target; btn.textContent='初始化中…'; btn.disabled=true;
   try {
-    const r = await fetch('https://api.jsonbin.io/v3/b', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'english-learning'},
-      body: JSON.stringify(buildSyncRecord())
-    });
-    if(!r.ok) throw new Error(await apiErrorMessage(r, '初始化同步失败'));
-    const data = await r.json();
-    saveSyncCfg({apiKey:key, binId:data.metadata.id, lastSync:new Date().toISOString()});
+    const record = buildSyncRecord();
+    const cfg = {apiKey:key, binId:null, lastSync:new Date().toISOString()};
+    if (recordBytes(record) > SYNC_DIRECT_LIMIT) await uploadChunkedRecord(cfg, record);
+    else cfg.binId = await createSyncBin(key, record, 'english-learning');
+    saveSyncCfg(cfg);
     updateSyncLabel();
     openSyncModal();
     toast('☁️ 同步初始化成功！');
@@ -1628,13 +1671,9 @@ async function joinSync() {
   if(!key||!binId){showSyncErr('请填写所有字段');return;}
   const btn = event.target; btn.textContent='连接中…'; btn.disabled=true;
   try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{'X-Master-Key':key}});
-    if(!r.ok) throw new Error(await apiErrorMessage(r, '关联失败'));
-    const data = await r.json();
-    db.save(data.record.cards||[]);
-    if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
-    restoreReviewHistory(data.record);
-    saveSyncCfg({apiKey:key, binId, lastSync:new Date().toISOString()});
+    const loaded = await loadSyncRecord(key, binId);
+    applySyncRecord(loaded.record);
+    saveSyncCfg({apiKey:key, binId, syncMode:loaded.chunked?'chunked':undefined, lastSync:new Date().toISOString()});
     updateSyncLabel(); updateBadge(); updateSceneNav();
     closeSyncModal(); toast('☁️ 关联成功，数据已下载！');
     if(curPage==='home')renderHome();
@@ -1645,14 +1684,11 @@ async function doUpload() {
   const cfg = getSyncCfg(); if(!cfg)return;
   const btn = event.target; btn.textContent='上传中…'; btn.disabled=true;
   try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},
-      body:JSON.stringify(buildSyncRecord())
-    });
-    if(!r.ok) throw new Error(await apiErrorMessage(r, '上传失败'));
+    const record = buildSyncRecord();
+    if (cfg.syncMode === 'chunked' || recordBytes(record) > SYNC_DIRECT_LIMIT) await uploadChunkedRecord(cfg, record);
+    else await updateSyncBin(cfg.apiKey, cfg.binId, record);
     cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
-    toast('↑ 上传成功！'); closeSyncModal();
+    toast(cfg.syncMode==='chunked' ? '↑ 已拆分并上传成功！' : '↑ 上传成功！'); closeSyncModal();
   } catch(e) { showSyncErr(e.message); btn.textContent='↑ 上传到云端'; btn.disabled=false; }
 }
 
@@ -1660,12 +1696,9 @@ async function doDownload() {
   const cfg = getSyncCfg(); if(!cfg)return;
   const btn = event.target; btn.textContent='下载中…'; btn.disabled=true;
   try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:{'X-Master-Key':cfg.apiKey}});
-    if(!r.ok) throw new Error(await apiErrorMessage(r, '下载失败'));
-    const data = await r.json();
-    db.save(data.record.cards||[]);
-    if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
-    restoreReviewHistory(data.record);
+    const loaded = await loadSyncRecord(cfg.apiKey, cfg.binId);
+    applySyncRecord(loaded.record);
+    cfg.syncMode = loaded.chunked ? 'chunked' : undefined;
     cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
     updateBadge(); updateSceneNav();
     if(curPage==='home')renderHome();
