@@ -1523,6 +1523,21 @@ function toast(msg){
 const SYNC_KEY = 'eng_sync_v1';
 function getSyncCfg() { return JSON.parse(localStorage.getItem(SYNC_KEY)||'null'); }
 function saveSyncCfg(c) { localStorage.setItem(SYNC_KEY, JSON.stringify(c)); }
+function buildSyncRecord() {
+  return {cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),reviewHistory:getReviewHistory(),lastSync:new Date().toISOString()};
+}
+function syncRecordBytes() { return new Blob([JSON.stringify(buildSyncRecord())]).size; }
+function formatBytes(bytes) { return bytes < 1024 ? `${bytes} B` : `${(bytes/1024).toFixed(1)} KB`; }
+async function apiErrorMessage(response, action) {
+  let detail = '';
+  try {
+    const body = await response.json();
+    detail = body.message || body.error || '';
+  } catch (_) {
+    try { detail = (await response.text()).trim().slice(0, 180); } catch (_) {}
+  }
+  return `${action}（HTTP ${response.status}）${detail ? `：${detail}` : ''}`;
+}
 // 清除复制时混入的不可见Unicode字符，只保留ASCII可见字符
 function cleanKey(s) { return s.replace(/[^\x20-\x7E]/g,'').trim(); }
 
@@ -1547,10 +1562,13 @@ function openSyncModal() {
       <p id="sync-err" style="color:#E03E3E;font-size:13px;margin-top:10px;display:none"></p>`;
   } else {
     const lastSync = cfg.lastSync ? new Date(cfg.lastSync).toLocaleString('zh-CN') : '从未同步';
+    const bytes = syncRecordBytes();
+    const sizeWarning = bytes > 100 * 1024;
     el.innerHTML = `
       <div style="background:var(--sb);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;line-height:1.8">
         <div><b>同步码</b>：<span style="font-family:monospace;color:var(--accent)">${cfg.binId}</span></div>
         <div style="color:var(--muted)">上次同步：${lastSync}</div>
+        <div style="color:${sizeWarning?'var(--red)':'var(--muted)'}">本次待上传数据：${formatBytes(bytes)}${sizeWarning?'（超过 JSONBin 免费版约 100 KB 上限）':''}</div>
       </div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
         在另一台设备打开网页后，点「☁️ 同步设置」→「已有同步码」，输入上方同步码即可关联。
@@ -1593,9 +1611,9 @@ async function initSync() {
     const r = await fetch('https://api.jsonbin.io/v3/b', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'english-learning'},
-      body: JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),reviewHistory:getReviewHistory(),lastSync:new Date().toISOString()})
+      body: JSON.stringify(buildSyncRecord())
     });
-    if(!r.ok){const e=await r.json();throw new Error(e.message||'Key 无效，请检查后重试');}
+    if(!r.ok) throw new Error(await apiErrorMessage(r, '初始化同步失败'));
     const data = await r.json();
     saveSyncCfg({apiKey:key, binId:data.metadata.id, lastSync:new Date().toISOString()});
     updateSyncLabel();
@@ -1611,7 +1629,7 @@ async function joinSync() {
   const btn = event.target; btn.textContent='连接中…'; btn.disabled=true;
   try {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{headers:{'X-Master-Key':key}});
-    if(!r.ok) throw new Error('同步码或 Key 有误，请检查');
+    if(!r.ok) throw new Error(await apiErrorMessage(r, '关联失败'));
     const data = await r.json();
     db.save(data.record.cards||[]);
     if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
@@ -1630,9 +1648,9 @@ async function doUpload() {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`,{
       method:'PUT',
       headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},
-      body:JSON.stringify({cards:db.all(),streak:JSON.parse(localStorage.getItem(SKEY)||'{"s":0,"d":""}'),reviewHistory:getReviewHistory(),lastSync:new Date().toISOString()})
+      body:JSON.stringify(buildSyncRecord())
     });
-    if(!r.ok) throw new Error('上传失败，请检查网络');
+    if(!r.ok) throw new Error(await apiErrorMessage(r, '上传失败'));
     cfg.lastSync=new Date().toISOString(); saveSyncCfg(cfg);
     toast('↑ 上传成功！'); closeSyncModal();
   } catch(e) { showSyncErr(e.message); btn.textContent='↑ 上传到云端'; btn.disabled=false; }
@@ -1643,7 +1661,7 @@ async function doDownload() {
   const btn = event.target; btn.textContent='下载中…'; btn.disabled=true;
   try {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`,{headers:{'X-Master-Key':cfg.apiKey}});
-    if(!r.ok) throw new Error('下载失败，请检查网络');
+    if(!r.ok) throw new Error(await apiErrorMessage(r, '下载失败'));
     const data = await r.json();
     db.save(data.record.cards||[]);
     if(data.record.streak) localStorage.setItem(SKEY, JSON.stringify(data.record.streak));
